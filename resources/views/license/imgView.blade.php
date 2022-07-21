@@ -1,0 +1,1 @@
+<img src="licenses/big/{{$_GET['img']}}"   style=" width: 100% ; " />  
