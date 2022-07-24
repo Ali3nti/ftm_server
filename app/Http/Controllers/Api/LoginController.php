@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use app\Http\Controllers\Controller;
-use App\Role;
 use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
