@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\LoginController;
+use App\Http\Controllers\Api\ShiftEndController;
 use App\Http\Controllers\Api\ShiftStartController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::namespace("Api")->prefix('')->group(function () {
     Route::post('login', [LoginController::class,'login']);
+    Route::post('last_shift', [ShiftStartController::class,'lastShift']);
     Route::post('start_shift', [ShiftStartController::class,'start']);
+    Route::post('contradiction', [ShiftStartController::class,'contradiction']);
+    Route::post('end_shift', [ShiftEndController::class,'end']);
 });
 
