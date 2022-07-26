@@ -12,11 +12,8 @@ class ShiftStartController extends Controller
 {
     public function LastShift(Request $request)
     {
-
         $state = $request->state_id;
         $user = $request->user_id;
-
-        // $result = (object) array();
 
         $checkStateStatus = DB::table('app_states')
             ->select('status')
@@ -24,13 +21,13 @@ class ShiftStartController extends Controller
             ->first();
 
         $checkUserStatus = DB::table('app_users')
-        ->select('status')
+            ->select('status')
             ->where('id', $user)
             ->first();
 
-        if ($checkUserStatus->status == 3) {
+        if ($checkStateStatus->status == 3) {
 
-            if ($checkStateStatus->status == 3) {
+            if ($checkUserStatus->status == 3) {
                 $result = DB::table('app_shift_data')
                     ->orderBy('id', 'desc')
                     ->where('state_id', $state)
@@ -45,9 +42,9 @@ class ShiftStartController extends Controller
                 }
             } else {
                 return $message = array(
-                    'status' => '0',
+                    'status' => '2',
                     'message' => 'This shift does not defined for this user.',
-                    'data' => []
+                    'data' => ['id' => 1]
                 );
             }
         } else if ($checkStateStatus->status == 1) {
@@ -84,7 +81,7 @@ class ShiftStartController extends Controller
                         ->limit(1)
                         ->offset(1)
                         ->first();
-                        // ->where('user_id', "!=", $user)
+                    // ->where('user_id', "!=", $user)
 
                     if ($result) {
                         return $message = array(
@@ -101,7 +98,7 @@ class ShiftStartController extends Controller
                     'data' => []
                 );
             }
-        }else{
+        } else {
             return $message = array(
                 'status' => '404',
                 'message' => 'Else Items',
@@ -112,10 +109,18 @@ class ShiftStartController extends Controller
 
     public function Contradiction(Request $request)
     {
-        $state = $request->state_id;
-        $user = $request->user_id;
+        $state    = $request->state_id;
+        $user     = $request->user_id;
+        $nozzle_1 = $request->nozzle_1;
+        $nozzle_2 = $request->nozzle_2;
+        $nozzle_3 = $request->nozzle_3;
+        $nozzle_4 = $request->nozzle_4;
+        $nozzle_5 = $request->nozzle_5;
+        $nozzle_6 = $request->nozzle_6;
+        $nozzle_7 = $request->nozzle_7;
+        $nozzle_8 = $request->nozzle_8;
+
         $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
-        $data = (object) $request->data;
 
         $contradictory_id = DB::table('app_shift_data')
             ->select('id')
@@ -135,14 +140,14 @@ class ShiftStartController extends Controller
                 'create_at' => $create_date,
                 'contradictory_id' => $contradictory_id->id,
                 'modified_id' => 1,
-                'nozzle_1' => $data->nozzle1,
-                'nozzle_2' => $data->nozzle2,
-                'nozzle_3' => $data->nozzle3,
-                'nozzle_4' => $data->nozzle4,
-                'nozzle_5' => $data->nozzle5,
-                'nozzle_6' => $data->nozzle6,
-                'nozzle_7' => $data->nozzle7,
-                'nozzle_8' => $data->nozzle8
+                'nozzle_1' => $nozzle_1,
+                'nozzle_2' => $nozzle_2,
+                'nozzle_3' => $nozzle_3,
+                'nozzle_4' => $nozzle_4,
+                'nozzle_5' => $nozzle_5,
+                'nozzle_6' => $nozzle_6,
+                'nozzle_7' => $nozzle_7,
+                'nozzle_8' => $nozzle_8
             ]);
 
         $shift_id = DB::table('app_shift_data')
@@ -162,8 +167,6 @@ class ShiftStartController extends Controller
             ->where('id', $user)
             ->update(['status' => 1]);
 
-
-
         return $message = array(
             "status" => "1",
             "message" => "Contradiction has been set successfully.",
@@ -172,10 +175,7 @@ class ShiftStartController extends Controller
                 "shift_id" => $shift_id
             ]
         );
-
     }
-
-
 
     public function Start(Request $request)
     {
@@ -185,10 +185,10 @@ class ShiftStartController extends Controller
         $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
 
         $changeStateStatus = DB::table('app_shift_data')
-        ->orderBy('id', 'desc')
-        ->where('state_id', $state)
-        ->limit(1)
-        ->update(['confirm' => "11000"]);
+            ->orderBy('id', 'desc')
+            ->where('state_id', $state)
+            ->limit(1)
+            ->update(['confirm' => "11000"]);
 
         $shift_id = DB::table('app_shift_data')
             ->insertGetId([
