@@ -3,18 +3,38 @@
 namespace App\Http\Controllers\Api;
 
 use app\Http\Controllers\Controller;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class InfoController extends Controller{
-    
-    public function appInfo(Request $request){
+class AppController extends Controller
+{
 
-        $id_personal = $request->id_personal;
-        $user = DB::table('app_users')
-        ->where('id_personal', $id_personal)
-        ->get();
+    public function appInfo()
+    {
 
-        return $message = array('status' => '1','message' => $user);
-    }    
+        $server_time = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+
+
+        $roles = DB::table('app_roles')
+            ->get();
+
+        $cities = DB::table('app_city')
+            ->get();
+
+        $stations = DB::table('app_states')
+            ->get();
+
+        return $message = array(
+            'status' => '1',
+            'message' => 'Connected seccesfully',
+            'data' => [
+                'server_time' => $server_time,
+                'roles' => $roles,
+                'cities' => $cities,
+                'stations' => $stations
+            ]
+        );
+    }
 }
