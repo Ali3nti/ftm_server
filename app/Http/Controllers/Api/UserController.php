@@ -75,7 +75,9 @@ class UserController extends Controller
                             'id_personnel' => $id_personnel,
                             'state' => $state_id,
                             'city' => $city_id,
-                            'created_at' => $create_date
+                            'avatar' => 'images/avatar/'.$phone.'.jpg',
+                            'created_at' => $create_date,
+                            'update_at' => $create_date
                         ]);
 
                     if ($addUser) {
