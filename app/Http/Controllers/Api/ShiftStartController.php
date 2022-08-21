@@ -44,7 +44,7 @@ class ShiftStartController extends Controller
                 return $message = array(
                     'status' => '2',
                     'message' => 'This shift does not defined for this user.',
-                    'data' => ['id' => 1]
+                    'data' => []
                 );
             }
         } else if ($checkStateStatus->status == 1) {
