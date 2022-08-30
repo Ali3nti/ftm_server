@@ -35,7 +35,7 @@ class LoginController extends Controller
 
             $update = DB::table('app_users')
                 ->where('phone', $user_phone)
-                ->update(['otp_value' => $otpval, 'last_login_at' => $login_date, "update_at" => $login_date]);
+                ->update(['otp_value' => $otpval, "update_at" => $login_date]);
 
             $user = DB::table('app_users')
                 ->where('phone', $user_phone)
@@ -46,13 +46,17 @@ class LoginController extends Controller
 
                 $user->role = DB::table('app_roles')->where('id', $user->role)->first();
 
-                $state = DB::table('app_states')->where('id', $user->state)->first();
-                $state->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $state->supervisor)->first();
-                $user->state = $state;
+                $station = DB::table('app_stations')->where('id', $user->station)->first();
+                $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+                $user->station = $station;
     
                 // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
                 $user->city = DB::table('app_city')->where('id', $user->city)->first();
                 $user->status = DB::table('app_status')->where('id', $user->status)->first();
+
+                $updateLoginTime = DB::table('app_users')
+                ->where('phone', $user_phone)
+                ->update(['last_login_at' => $login_date, "update_at" => $login_date]);
     
     
                 return $message = array(

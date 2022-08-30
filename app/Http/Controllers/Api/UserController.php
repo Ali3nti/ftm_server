@@ -23,7 +23,7 @@ class UserController extends Controller
         $id_card = $request->id_card;
         $id_personnel = $request->id_personnel;
         $city_id = $request->city_id;
-        $state_id = $request->state_id;
+        $station_id = $request->station_id;
 
         $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
 
@@ -73,7 +73,7 @@ class UserController extends Controller
                             'phone' => $phone,
                             'id_card' => $id_card,
                             'id_personnel' => $id_personnel,
-                            'state' => $state_id,
+                            'station' => $station_id,
                             'city' => $city_id,
                             'avatar' => 'images/avatar/'.$phone.'.jpg',
                             'created_at' => $create_date,
@@ -116,9 +116,9 @@ class UserController extends Controller
 
             $row->role = DB::table('app_roles')->where('id', $row->role)->first();
 
-            $state = DB::table('app_states')->where('id', $row->state)->first();
-            $state->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $state->supervisor)->first();
-            $row->state = $state;
+            $station = DB::table('app_stations')->where('id', $row->station)->first();
+            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+            $row->station = $station;
             $row->city = DB::table('app_city')->where('id', $row->city)->first();
             $row->status = DB::table('app_status')->where('id', $row->status)->first();
 
@@ -144,9 +144,9 @@ class UserController extends Controller
 
             $user->role = DB::table('app_roles')->where('id', $user->role)->first();
 
-            $state = DB::table('app_states')->where('id', $user->state)->first();
-            $state->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $state->supervisor)->first();
-            $user->state = $state;
+            $station = DB::table('app_stations')->where('id', $user->station)->first();
+            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+            $user->station = $station;
 
             // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
             $user->city = DB::table('app_city')->where('id', $user->city)->first();

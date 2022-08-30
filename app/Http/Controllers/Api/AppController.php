@@ -23,7 +23,7 @@ class AppController extends Controller
         $cities = DB::table('app_city')
             ->get();
 
-        $stations = DB::table('app_states')
+        $stations = DB::table('app_stations')
             ->get();
 
         return $message = array(

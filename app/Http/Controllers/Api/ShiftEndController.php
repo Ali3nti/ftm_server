@@ -13,7 +13,7 @@ class ShiftEndController extends Controller
     public function End(Request $request)
     {
         $user = $request->user_id;
-        $state = $request->state_id;
+        $station = $request->station_id;
         $nozzle_1 = $request->nozzle_1;
         $nozzle_2 = $request->nozzle_2;
         $nozzle_3 = $request->nozzle_3;
@@ -40,7 +40,7 @@ class ShiftEndController extends Controller
         $row = DB::table('app_shift_data')
             ->select('id')
             ->orderBy('id', 'desc')
-            ->where('state_id', $state)
+            ->where('station_id', $station)
             ->first();
 
         $update = DB::table('app_shift_data')
@@ -72,14 +72,18 @@ class ShiftEndController extends Controller
 
         if ($update) {
 
-            $updateStateStatus = DB::table('app_states')
-                ->where('id', $state)
+            $updateStationStatus = DB::table('app_stations')
+                ->where('id', $station)
                 ->update(['status' => 3]);
 
             $updateUserStatus = DB::table('app_users')
-                ->where('id', $user)
-                ->update(['status' => 2]);
-
+                ->where('station', $station)
+                ->update(['status' => 3]);
+                
+            // $updateOtherUserStatus = DB::table('app_users')
+            //     // ->where('id', !$user)
+            //     ->where('station_id', $station)
+            //     ->update(['status' => 3]);
 
             return $message = array(
                 "status" => "1",
