@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AppController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\ShiftEndController;
 use App\Http\Controllers\Api\ShiftStartController;
 use App\Http\Controllers\Api\SupervisorController;
+use App\Http\Controllers\Api\OperatorController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,8 @@ Route::namespace("Api")->prefix('')->group(function () {
     Route::post('start_shift', [ShiftStartController::class,'start']);
     Route::post('contradiction', [ShiftStartController::class,'contradiction']);
     Route::post('end_shift', [ShiftEndController::class,'end']);
-    Route::post('all_shift_data', [SupervisorController::class,'allShiftData']);
+    Route::post('all_shift_data', [AdminController::class,'allShiftData']);
+    Route::post('supervisor_shift_data', [SupervisorController::class,'supervisorShiftData']);
+    Route::post('operator_shift_data', [OperatorController::class,'operatorShiftData']);
 });
 

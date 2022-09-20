@@ -8,17 +8,20 @@ use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SupervisorController extends Controller
-{
-    public function supervisorShiftData(Request $request)
+class OperatorController extends Controller
+{ 
+    
+    public function operatorShiftData(Request $request)
     {
         $station = $request->station_id;
+        $user = $request->user_id;
 
         $row = DB::table('app_shift_data')
             ->orderBy('id', 'desc')
             ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
             ->select('app_shift_data.*', 'app_stations.name as station_name')
             ->where('station_id', $station)
+            ->where('user_id', $user)
             ->get();
 
         if ($row) {

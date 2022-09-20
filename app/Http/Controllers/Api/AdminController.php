@@ -8,9 +8,9 @@ use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SupervisorController extends Controller
+class AdminController extends Controller
 {
-    public function supervisorShiftData(Request $request)
+    public function allShiftData(Request $request)
     {
         $station = $request->station_id;
 
@@ -18,7 +18,7 @@ class SupervisorController extends Controller
             ->orderBy('id', 'desc')
             ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
             ->select('app_shift_data.*', 'app_stations.name as station_name')
-            ->where('station_id', $station)
+            // ->where('station_id', $station)
             ->get();
 
         if ($row) {
@@ -43,5 +43,6 @@ class SupervisorController extends Controller
                 "data" => []
             );
         }
-    }
+    }    
+
 }

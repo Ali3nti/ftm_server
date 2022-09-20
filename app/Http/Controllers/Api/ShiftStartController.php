@@ -15,13 +15,10 @@ class ShiftStartController extends Controller
         $station = $request->station_id;
         $user = $request->user_id;
 
-
         $checkStationStatus = DB::table('app_stations')
             ->select('status')
             ->where('id', $station)
             ->first();
-
-            
 
         $checkUserStatus = DB::table('app_users')
             ->select('status')
