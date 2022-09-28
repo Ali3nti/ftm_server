@@ -117,6 +117,19 @@ class ShiftStartController extends Controller
                         'message' => 'This shift does not defined for this user.',
                         'data' => $result
                     );
+                }else{
+                    
+                    $result = DB::table('app_shift_data')
+                    ->orderBy('id', 'desc')
+                    ->where('station_id', $station)
+                    ->first();
+                    
+                    
+                    return $message = array(
+                        'status' => '2',
+                        'message' => 'This wrong.',
+                        'data' => $result
+                    );
                 }
             }
         } else {

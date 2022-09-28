@@ -7,9 +7,26 @@ use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+
+    public function __construct()
+    {
+        // $storage =  DB::table('image_space')
+        //             ->first();
+
+        // if($storage->aws == 1){
+        //     $this->storage_space = "s3.aws";
+        // }
+        // else if($storage->digital_ocean == 1){
+        //     $this->storage_space = "s3.digitalocean";
+        // }else{
+        $this->storage_space = "same_server";
+        // }
+
+    }
 
 
 
@@ -26,6 +43,18 @@ class UserController extends Controller
         $station_id = $request->station_id;
 
         $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+
+        $filePath = "";
+
+        if ($request->image) {
+
+            $image = $request->image;
+            $image->move('images/avatar/', $phone . '.jpg');
+            $filePath = 'images/avatar/' . $phone . '.jpg';
+
+        } else {
+            $filePath = 'N/A';
+        }
 
         $checkUserCardID = DB::table('app_users')
             ->where('id_card', $id_card)
@@ -75,7 +104,7 @@ class UserController extends Controller
                             'id_personnel' => $id_personnel,
                             'station' => $station_id,
                             'city' => $city_id,
-                            'avatar' => 'images/avatar/'.$phone.'.jpg',
+                            'avatar' => $filePath,
                             'created_at' => $create_date,
                             'update_at' => $create_date
                         ]);
