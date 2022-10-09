@@ -23,12 +23,11 @@ class AdminController extends Controller
 
         if ($row) {
 
-        foreach($row as $edit) {
+            foreach ($row as $edit) {
 
-            $name = DB::table('app_users')->select('first_name','last_name')->where('id', $edit->user_id)->first();
-            $edit->user_name = $name->first_name . ' ' . $name->last_name;
-
-        }
+                $name = DB::table('app_users')->select('first_name', 'last_name')->where('id', $edit->user_id)->first();
+                $edit->user_name = $name->first_name . ' ' . $name->last_name;
+            }
 
             return $message = array(
                 "status" => "1",
@@ -43,6 +42,58 @@ class AdminController extends Controller
                 "data" => []
             );
         }
-    }    
+    }
 
+    public function addStation(Request $request)
+    {
+
+        $station_name = $request->station_name;
+        $location = $request->location;
+        $station_code = $request->station_code;
+        $city_id = $request->city_id;
+        $number_of_dispenser = $request->number_of_dispenser;
+
+        $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+
+        // $checkStationCode = DB::table('app_stations')
+        //     ->where('code', $stationCode)
+        //     ->get();
+
+        // if ($checkStationCode) {
+        //     return $message = array(
+        //         "status" => "0",
+        //         "message" => "Station already exists",
+        //         "data" => [
+        //             "station_id" => $checkStationCode->id
+        //         ]
+        //     );
+        // } else {
+            $addStation = DB::table('app_stations')
+                ->insertGetId([
+                    'name' => $station_name,
+                    'location' => $location,
+                    // 'code' => $station_code,
+                    // 'city' => $city_id,
+                    'dispenser' => $number_of_dispenser,
+                    // 'supervisor' => $supervisor,
+                    // 'created_at' => $create_date
+                ]);
+
+            if ($addStation) {
+                return $message = array(
+                    "status" => "1",
+                    "message" => "Station added successfully",
+                    "data" => [
+                        "station_id" => $addStation
+                    ]
+                );
+            } else {
+                return $message = array(
+                    "status" => "0",
+                    "message" => "Error in add Station",
+                    "data" => []
+                );
+            // }
+        }
+    }
 }

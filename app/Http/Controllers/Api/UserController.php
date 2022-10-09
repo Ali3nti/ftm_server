@@ -140,6 +140,7 @@ class UserController extends Controller
         $req = DB::table('app_users')
             ->get();
         $users = array();
+        
         foreach ($req as $row) {
 
 

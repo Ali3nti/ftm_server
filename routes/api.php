@@ -30,10 +30,12 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::namespace("Api")->prefix('')->group(function () {
     Route::get('app_info', [AppController::class,'appInfo']);
     Route::post('login', [LoginController::class,'login']);
+    Route::post('station_operators', [AppController::class,'StationOperators']);
     Route::post('add_user', [UserController::class,'addUser']);
+    Route::post('add_station', [AdminController::class,'addStation']);
     Route::get('all_user', [UserController::class,'allUser']);
     Route::post('user_verify', [UserController::class,'userVerify']);
-    Route::post('last_shift', [ShiftStartController::class,'lastShift']);
+    Route::post('shift_data', [ShiftStartController::class,'ShiftData']);
     Route::post('start_shift', [ShiftStartController::class,'start']);
     Route::post('contradiction', [ShiftStartController::class,'contradiction']);
     Route::post('end_shift', [ShiftEndController::class,'end']);
