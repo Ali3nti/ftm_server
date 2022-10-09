@@ -66,8 +66,6 @@ class ShiftStartController extends Controller
 
                     if ($result) {
 
-                        // return "hello";
-
                         $operators = array();
                         $operators = unserialize($result->operators_id);
 
@@ -81,6 +79,7 @@ class ShiftStartController extends Controller
                             }
                         }
                         if ($isExist) {
+                            $result->operators_id = $operators[1];
                             $data['shift'] = $result;
 
                             return $message = array(
@@ -104,8 +103,6 @@ class ShiftStartController extends Controller
                     }
                 } else {
 
-
-
                     $result = DB::table('app_shift_data')
                         ->orderBy('id', 'desc')
                         ->where('station_id', $station_id)
@@ -113,7 +110,6 @@ class ShiftStartController extends Controller
                         ->first();
 
                     $result->operators_id = unserialize($result->operators_id);
-                    // return $result;
 
                     if ($result) {
                         $data['shift'] = $result;
@@ -285,6 +281,7 @@ class ShiftStartController extends Controller
     {
         $station    = $request->station_id;
         $user     = $request->user_id;
+        $second_user = $request->second_user_id;
         $nozzle_1 = $request->nozzle_1;
         $nozzle_2 = $request->nozzle_2;
         $nozzle_3 = $request->nozzle_3;
@@ -319,12 +316,15 @@ class ShiftStartController extends Controller
             ->update(['contradiction_flag' => 1, 'contradiction' => $newResult]);
 
 
+        $operators = array($user, $second_user);
+        $operators = serialize($operators);
+
         $shift_id = DB::table('app_shift_data')
             ->insertGetId([
                 'station_id' => $station,
                 'user_id' => $user,
+                'operators_id' => $operators,
                 'start_shift_at' => $create_date,
-                'operators_id' => $user,
                 'modified_flag' => 1
             ]);
 
