@@ -38,66 +38,93 @@ class ShiftEndController extends Controller
         $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
 
         $row = DB::table('app_shift_data')
-            ->select('id')
-            ->orderBy('id', 'desc')
+            ->orderByDesc('id')
             ->where('station_id', $station)
             ->first();
 
-        $update = DB::table('app_shift_data')
-            ->where('id', $row->id)
-            ->update([
-                'end_shift_at' => $create_date,
-                'nozzle_1' => $nozzle_1,
-                'nozzle_2' => $nozzle_2,
-                'nozzle_3' => $nozzle_3,
-                'nozzle_4' => $nozzle_4,
-                'nozzle_5' => $nozzle_5,
-                'nozzle_6' => $nozzle_6,
-                'nozzle_7' => $nozzle_7,
-                'nozzle_8' => $nozzle_8,
-                'result_1' => $result_1,
-                'result_2' => $result_2,
-                'result_3' => $result_3,
-                'result_4' => $result_4,
-                'result_5' => $result_5,
-                'result_6' => $result_6,
-                'result_7' => $result_7,
-                'result_8' => $result_8,
-                'total_shift_result' => $total_shift_result,
-                'hand_cash' => $hand_cash,
-                'card_cash' => $card_cash,
-                'total_shift_cash' => $total_shift_cash,
-                // 'contradiction' => $contradiction,
-            ]);
+        if ($row->confirm == '11000' | $row->confirm == '10000') {
 
-        if ($update) {
+            $update = DB::table('app_shift_data')
+                ->where('id', $row->id)
+                ->update([
+                    'end_shift_at' => $create_date,
+                    'nozzle_1' => $nozzle_1,
+                    'nozzle_2' => $nozzle_2,
+                    'nozzle_3' => $nozzle_3,
+                    'nozzle_4' => $nozzle_4,
+                    'nozzle_5' => $nozzle_5,
+                    'nozzle_6' => $nozzle_6,
+                    'nozzle_7' => $nozzle_7,
+                    'nozzle_8' => $nozzle_8,
+                    'result_1' => $result_1,
+                    'result_2' => $result_2,
+                    'result_3' => $result_3,
+                    'result_4' => $result_4,
+                    'result_5' => $result_5,
+                    'result_6' => $result_6,
+                    'result_7' => $result_7,
+                    'result_8' => $result_8,
+                    'total_shift_result' => $total_shift_result,
+                    'hand_cash' => $hand_cash,
+                    'card_cash' => $card_cash,
+                    'total_shift_cash' => $total_shift_cash,
+                    'confirm' => "11100",
+                    // 'contradiction' => $contradiction,
+                ]);
 
-            $updateStationStatus = DB::table('app_stations')
-                ->where('id', $station)
-                ->update(['status' => 3]);
+            if ($update) {
 
-            $updateUserStatus = DB::table('app_users')
-                ->where('station', $station)
-                ->update(['status' => 3]);
-                
-            // $updateOtherUserStatus = DB::table('app_users')
-            //     // ->where('id', !$user)
-            //     ->where('station_id', $station)
-            //     ->update(['status' => 3]);
+                $updateStationStatus = DB::table('app_stations')
+                    ->where('id', $station)
+                    ->update(['status' => 3]);
 
-            return $message = array(
-                "status" => "1",
-                "message" => "Data has been set on shift data table successfully.",
-                "data" => [
-                    "shift_id" => $row
-                ]
-            );
-        } else {
-            return $message = array(
-                "status" => "0",
-                "message" => "Error",
-                "data" => []
-            );
+                $updateUserStatus = DB::table('app_users')
+                    ->where('id', $user)
+                    ->update(['status' => 3]);
+
+                // $updateOtherUserStatus = DB::table('app_users')
+                //     // ->where('id', !$user)
+                //     ->where('station_id', $station)
+                //     ->update(['status' => 3]);
+
+                return $message = array(
+                    "status" => "1",
+                    "message" => "Data has been set on shift data table successfully.",
+                    "data" => [
+                        "shift_id" => $row
+                    ]
+                );
+            } else {
+                return $message = array(
+                    "status" => "0",
+                    "message" => "Error1",
+                    "data" => []
+                );
+            }
+        } elseif ($row->confirm == "11100") {
+            $update = DB::table('app_shift_data')
+                ->where('id', $row->id)
+                ->update(['confirm' => "11110"]);
+            if ($update) {
+
+                $updateUserStatus = DB::table('app_users')
+                    ->where('id', $user)
+                    ->update(['status' => 3]);
+
+                return $message = array(
+                    "status" => "1",
+                    "message" => "Data has been confirm on shift data table successfully.",
+                    "data" => [
+                        "shift_id" => $row
+                    ]
+                );
+            } else {
+                return $message = array(
+                    "status" => "0",
+                    "message" => "Error2",
+                    "data" => []
+                );
+            }
         }
     }
 }

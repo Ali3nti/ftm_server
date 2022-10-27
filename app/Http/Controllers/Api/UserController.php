@@ -51,7 +51,6 @@ class UserController extends Controller
             $image = $request->image;
             $image->move('images/avatar/', $phone . '.jpg');
             $filePath = 'images/avatar/' . $phone . '.jpg';
-
         } else {
             $filePath = 'N/A';
         }
@@ -140,17 +139,30 @@ class UserController extends Controller
         $req = DB::table('app_users')
             ->get();
         $users = array();
-        
+
         foreach ($req as $row) {
 
 
-            $row->role = DB::table('app_roles')->where('id', $row->role)->first();
+            $row->role = DB::table('app_roles')
+                ->where('id', $row->role)->first();
 
-            $station = DB::table('app_stations')->where('id', $row->station)->first();
-            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+            $station = DB::table('app_stations')
+                ->where('id', $row->station)
+                ->first();
+
+            $station->supervisor = DB::table('app_users')
+                ->select('id', 'first_name', 'last_name')
+                ->where('id', $station->supervisor)
+                ->first();
+
             $row->station = $station;
-            $row->city = DB::table('app_city')->where('id', $row->city)->first();
-            $row->status = DB::table('app_status')->where('id', $row->status)->first();
+            $row->city = DB::table('app_city')
+                ->where('id', $row->city)
+                ->first();
+
+            $row->status = DB::table('app_status')
+                ->where('id', $row->status)
+                ->first();
 
             $users[] = $row;
         }
@@ -172,16 +184,29 @@ class UserController extends Controller
 
         if ($user) {
 
-            $user->role = DB::table('app_roles')->where('id', $user->role)->first();
+            $user->role = DB::table('app_roles')
+                ->where('id', $user->role)
+                ->first();
 
-            $station = DB::table('app_stations')->where('id', $user->station)->first();
-            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+            $station = DB::table('app_stations')
+                ->where('id', $user->station)
+                ->first();
+
+            $station->supervisor = DB::table('app_users')
+                ->select('id', 'first_name', 'last_name')
+                ->where('id', $station->supervisor)
+                ->first();
+
             $user->station = $station;
 
             // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
-            $user->city = DB::table('app_city')->where('id', $user->city)->first();
-            $user->status = DB::table('app_status')->where('id', $user->status)->first();
+            $user->city = DB::table('app_city')
+                ->where('id', $user->city)
+                ->first();
 
+            $user->status = DB::table('app_status')
+                ->where('id', $user->status)
+                ->first();
 
             return $message = array('status' => '1', 'message' => $user);
 
@@ -209,9 +234,85 @@ class UserController extends Controller
             ]);
 
         if ($user) {
-            return $message = array('status' => '1', 'message' => 'User verified');
+            return $message = array(
+                'status' => '1',
+                'message' => 'User verified'
+            );
         } else {
-            return $message = array('status' => '0', 'message' => 'Something was wrong');
+            return $message = array(
+                'status' => '0',
+                'message' => 'Something was wrong'
+            );
         }
+    }
+
+    public function Timesheet(Request $request)
+    {
+
+        $user_id = $request->user_id;
+
+        $current_time = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+
+        $station = DB::table('app_users')
+            ->where('id', $user_id)
+            ->first();
+
+        $checkLastTime = DB::table('app_timesheet')
+            ->orderByDesc('id')
+            ->where('user_id', $user_id)
+            ->first();
+
+        if ($checkLastTime != null && $checkLastTime->end == 0) {
+
+            $updateTimeSheet = DB::table('app_timesheet')
+                ->where('id', $checkLastTime->id)
+                ->update([
+                    'end' => $current_time,
+                    'status' => 2,
+                ]);
+
+            return $message = array(
+                'status' => 1,
+                'message' => 'Timesheet is Closed!'
+            );
+        } else {
+            $addTimeSheet = DB::table('app_timesheet')
+                ->insertGetId([
+                    'user_id' => $user_id,
+                    'station_id' => $station->station,
+                    'start' => $current_time,
+                    'status' => 1,
+                ]);
+
+            return $message = array(
+                'status' => 2,
+                'message' => 'Timesheet is Started!'
+            );
+        }
+    }
+
+    public function getTimeSheet(Request $request){
+
+        $user_id = $request->user_id;
+
+        $getTimeSheet = DB::table('app_timesheet')
+        ->orderByDesc('id')
+        ->where('user_id', $user_id)
+        ->get();
+
+        if($getTimeSheet->isNotEmpty()){
+            return $message = array(
+                'status' => 1,
+                'message'=> 'Timesheet is returned',
+                'data' => $getTimeSheet
+            );
+        }else{
+            return $message = array(
+                'status' => 2,
+                'message'=> 'Timesheet for this user is Empty',
+                'data' => []
+            );
+        }
+        
     }
 }
