@@ -7,109 +7,171 @@ use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Exists;
 
 class ShiftEndController extends Controller
 {
     public function End(Request $request)
     {
         $user = $request->user_id;
-        $station = $request->station_id;
-        $nozzle_1 = $request->nozzle_1;
-        $nozzle_2 = $request->nozzle_2;
-        $nozzle_3 = $request->nozzle_3;
-        $nozzle_4 = $request->nozzle_4;
-        $nozzle_5 = $request->nozzle_5;
-        $nozzle_6 = $request->nozzle_6;
-        $nozzle_7 = $request->nozzle_7;
-        $nozzle_8 = $request->nozzle_8;
-        $result_1 = $request->result_1;
-        $result_2 = $request->result_2;
-        $result_3 = $request->result_3;
-        $result_4 = $request->result_4;
-        $result_5 = $request->result_5;
-        $result_6 = $request->result_6;
-        $result_7 = $request->result_7;
-        $result_8 = $request->result_8;
-        $hand_cash = $request->hand_cash;
-        $card_cash = $request->card_cash;
-        $total_shift_cash = $request->total_shift_cash;
-        $total_shift_result = $request->total_shift_result;
+        $id = $request->id;
+        $cash = $request->cash;
+        $dispenser_json = $request->dispenser_json;
+        $create_date = jdate();
+        $dispenser_json = json_encode($dispenser_json);
 
-        $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
-
-        $row = DB::table('app_shift_data')
-            ->orderByDesc('id')
-            ->where('station_id', $station)
+        $row = DB::table('app_report')
+            ->where('id', $id)
             ->first();
 
-        if ($row->confirm == '11000' | $row->confirm == '10000') {
+        $users = json_decode($row->users);
 
-            $update = DB::table('app_shift_data')
-                ->where('id', $row->id)
-                ->update([
-                    'end_shift_at' => $create_date,
-                    'nozzle_1' => $nozzle_1,
-                    'nozzle_2' => $nozzle_2,
-                    'nozzle_3' => $nozzle_3,
-                    'nozzle_4' => $nozzle_4,
-                    'nozzle_5' => $nozzle_5,
-                    'nozzle_6' => $nozzle_6,
-                    'nozzle_7' => $nozzle_7,
-                    'nozzle_8' => $nozzle_8,
-                    'result_1' => $result_1,
-                    'result_2' => $result_2,
-                    'result_3' => $result_3,
-                    'result_4' => $result_4,
-                    'result_5' => $result_5,
-                    'result_6' => $result_6,
-                    'result_7' => $result_7,
-                    'result_8' => $result_8,
-                    'total_shift_result' => $total_shift_result,
-                    'hand_cash' => $hand_cash,
-                    'card_cash' => $card_cash,
-                    'total_shift_cash' => $total_shift_cash,
-                    'confirm' => "11100",
-                    // 'contradiction' => $contradiction,
+        if ($row->confirm == '11000') {
+
+            if ($users->creator == $user) {
+
+                if ($users->creator != $users->assistant) {
+
+                    $update = DB::table('app_report')
+                        ->where('id', $id)
+                        ->update([
+                            'end_at' => $create_date,
+                            'dispensers' => $dispenser_json,
+                            'cash' => $cash,
+                            'confirm' => "11100",
+                        ]);
+
+                    if ($update) {
+
+                        $updateStationStatus = DB::table('app_stations')
+                            ->where('id', $row->station_id)
+                            ->update(['status' => 4]);
+
+                        $updateCreatorUserStatus = DB::table('app_users')
+                            ->where('id', $user)
+                            ->update(['status' => 5]);
+
+                        $updateAssistantUserStatus = DB::table('app_users')
+                            ->where('id', $user)
+                            ->update(['status' => 4]);
+
+                        return $message = array(
+                            "status" => "1",
+                            "message" => "Data has been set on shift data table successfully.",
+                            "data" => [
+                                "shift_id" => $row
+                            ]
+                        );
+                    } else {
+                        return $message = array(
+                            "status" => "0",
+                            "message" => "Error1",
+                            "data" => []
+                        );
+                    }
+                } else {
+                    $update = DB::table('app_report')
+                        ->where('id', $id)
+                        ->update([
+                            'end_at' => $create_date,
+                            'dispensers' => $dispenser_json,
+                            'cash' => $cash,
+                            'confirm' => "11110",
+                        ]);
+
+                    if ($update) {
+
+                        $updateStationStatus = DB::table('app_stations')
+                            ->where('id', $row->station_id)
+                            ->update(['status' => 1]);
+
+                        $updateCreatorUserStatus = DB::table('app_users')
+                            ->where('id', $user)
+                            ->update(['status' => 1]);
+
+                        return $message = array(
+                            "status" => "1",
+                            "message" => "Data has been set on shift data table successfully.",
+                            "data" => [
+                                "shift_id" => $row
+                            ]
+                        );
+                    } else {
+                        return $message = array(
+                            "status" => "0",
+                            "message" => "Error2",
+                            "data" => []
+                        );
+                    }
+                }
+            } else {
+                $creator = $users->creator;
+                $users = json_encode([
+                    'creator' => $users->creator,
+                    // 'finisher' => $user
+                    'assistant' => $user
                 ]);
 
+                $update = DB::table('app_report')
+                    ->where('id', $id)
+                    ->update([
+                        'users' => $users,
+                        'end_at' => $create_date,
+                        'dispensers' => $dispenser_json,
+                        'cash' => $cash,
+                        'confirm' => "11100",
+                    ]);
+
+                if ($update) {
+
+                    $updateStationStatus = DB::table('app_stations')
+                        ->where('id', $row->station_id)
+                        ->update(['status' => 4]);
+
+                    $updateFinisherUserStatus = DB::table('app_users')
+                        ->where('id', $user)
+                        ->update(['status' => 5]);
+
+                    $updateCreatorUserStatus = DB::table('app_users')
+                        ->where('id', $creator)
+                        ->update(['status' => 4]);
+
+                    return $message = array(
+                        "status" => "1",
+                        "message" => "Data has been set on shift data table successfully.",
+                        "data" => [
+                            "shift_id" => $row
+                        ]
+                    );
+                } else {
+                    return $message = array(
+                        "status" => "0",
+                        "message" => "Error3",
+                        "data" => []
+                    );
+                }
+            }
+        } elseif ($row->confirm == "11100") {
+
+            $update = DB::table('app_report')
+                ->where('id', $id)
+                ->update([
+                    'end_at' => $create_date,
+                    'confirm' => "11110"
+                ]);
             if ($update) {
 
                 $updateStationStatus = DB::table('app_stations')
-                    ->where('id', $station)
-                    ->update(['status' => 3]);
+                    ->where('id', $row->station_id)
+                    ->update(['status' => 1]);
 
                 $updateUserStatus = DB::table('app_users')
                     ->where('id', $user)
-                    ->update(['status' => 3]);
+                    ->update(['status' => 1]);
 
-                // $updateOtherUserStatus = DB::table('app_users')
-                //     // ->where('id', !$user)
-                //     ->where('station_id', $station)
-                //     ->update(['status' => 3]);
-
-                return $message = array(
-                    "status" => "1",
-                    "message" => "Data has been set on shift data table successfully.",
-                    "data" => [
-                        "shift_id" => $row
-                    ]
-                );
-            } else {
-                return $message = array(
-                    "status" => "0",
-                    "message" => "Error1",
-                    "data" => []
-                );
-            }
-        } elseif ($row->confirm == "11100") {
-            $update = DB::table('app_shift_data')
-                ->where('id', $row->id)
-                ->update(['confirm' => "11110"]);
-            if ($update) {
-
-                $updateUserStatus = DB::table('app_users')
-                    ->where('id', $user)
-                    ->update(['status' => 3]);
+                $updateFinisherUserStatus = DB::table('app_users')
+                    ->where('station', $row->station_id)
+                    ->update(['status' => 1]);
 
                 return $message = array(
                     "status" => "1",
@@ -121,7 +183,7 @@ class ShiftEndController extends Controller
             } else {
                 return $message = array(
                     "status" => "0",
-                    "message" => "Error2",
+                    "message" => "Error4",
                     "data" => []
                 );
             }

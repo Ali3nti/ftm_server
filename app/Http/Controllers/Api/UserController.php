@@ -7,29 +7,8 @@ use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-
 class UserController extends Controller
 {
-
-    public function __construct()
-    {
-        // $storage =  DB::table('image_space')
-        //             ->first();
-
-        // if($storage->aws == 1){
-        //     $this->storage_space = "s3.aws";
-        // }
-        // else if($storage->digital_ocean == 1){
-        //     $this->storage_space = "s3.digitalocean";
-        // }else{
-        $this->storage_space = "same_server";
-        // }
-
-    }
-
-
-
     public function addUser(Request $request)
     {
 
@@ -291,7 +270,8 @@ class UserController extends Controller
         }
     }
 
-    public function getTimeSheet(Request $request){
+    public function getTimeSheet(Request $request)
+    {
 
         $user_id = $request->user_id;
 
