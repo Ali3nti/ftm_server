@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ShiftStartController;
 use App\Http\Controllers\Api\SupervisorController;
 use App\Http\Controllers\Api\OperatorController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Dev\DevController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,23 +29,27 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::namespace("Api")->prefix('')->group(function () {
-    Route::get('app_info', [AppController::class,'appInfo']);
-    Route::post('login', [LoginController::class,'login']);
-    Route::post('station_operators', [AppController::class,'StationOperators']);
-    Route::post('add_user', [UserController::class,'addUser']);
-    Route::post('add_station', [AdminController::class,'addStation']);
-    Route::get('all_user', [UserController::class,'allUser']);
-    Route::post('user_verify', [UserController::class,'userVerify']);
-    Route::post('shift_data', [ShiftStartController::class,'ShiftData']);
-    Route::post('start_shift', [ShiftStartController::class,'start']);
-    Route::post('contradiction', [ShiftStartController::class,'contradiction']);
-    Route::post('end_shift', [ShiftEndController::class,'end']);
-    Route::post('all_shift_data', [AdminController::class,'allShiftData']);
-    Route::post('supervisor_shift_data', [SupervisorController::class,'supervisorShiftData']);
-    Route::post('supervisor_report', [SupervisorController::class,'SupervisorReport']);
-    Route::post('operator_shift_data', [OperatorController::class,'operatorShiftData']);
-    Route::post('timesheet', [UserController::class,'Timesheet']);
-    Route::post('get_timesheet', [UserController::class,'getTimesheet']);
-
+    Route::get('app_info', [AppController::class, 'appInfo']);
+    Route::post('login', [LoginController::class, 'login']);
+    Route::post('station_operators', [AppController::class, 'StationOperators']);
+    Route::post('add_user', [UserController::class, 'addUser']);
+    Route::post('add_station', [AdminController::class, 'addStation']);
+    Route::get('all_user', [UserController::class, 'allUser']);
+    Route::post('user_verify', [UserController::class, 'userVerify']);
+    Route::post('shift_data', [ShiftStartController::class, 'ShiftData']);
+    Route::post('start_shift', [ShiftStartController::class, 'start']);
+    Route::post('contradiction', [ShiftStartController::class, 'contradiction']);
+    Route::post('end_shift', [ShiftEndController::class, 'end']);
+    Route::post('all_shift_data', [AdminController::class, 'allShiftData']);
+    Route::post('supervisor_shift_data', [SupervisorController::class, 'supervisorShiftData']);
+    Route::post('supervisor_report', [SupervisorController::class, 'SupervisorReport']);
+    Route::post('operator_shift_data', [OperatorController::class, 'operatorShiftData']);
+    Route::post('timesheet', [UserController::class, 'Timesheet']);
+    Route::post('get_timesheet', [UserController::class, 'getTimesheet']);
 });
 
+Route::namespace("Dev")->prefix('')->group(function () {
+    Route::get('change_date', [DevController::class, 'ChangeDate']);
+    Route::get('serialize_operators', [DevController::class, 'SerializeOperators']);
+    Route::get('tranform_to_report_table', [DevController::class, 'TranformToReportTable']);
+});

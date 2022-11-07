@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Dev;
+
 
 use app\Http\Controllers\Controller;
-use DateTime;
-use DateTimeZone;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DevController extends Controller
@@ -46,5 +44,79 @@ class DevController extends Controller
         }
 
         return 'ok';
+    }
+
+    public function TranformToReportTable()
+    {
+
+        $all = DB::table('app_shift_data')
+            ->get();
+
+
+        $idList = array();
+
+        for ($i = 0; $i < count($all); $i++) {
+
+            $row = array();
+
+            $operator = unserialize($all[$i]->operators_id);
+
+            $operators["creator"] = $operator[0];
+            $operators["assistant"] = $operator[1];
+
+            $row["users"] = json_encode($operators);
+
+            $dispenserNum = DB::table('app_stations')
+                ->where('id', $all[$i]->station_id)
+                ->value('dispenser');
+
+            for ($j = 1; $j <= $dispenserNum; $j++) {
+                if ($j == 1) {
+                    $row["dispensers"][$j]["start_1"] = $all[$i]->nozzle_1 - $all[$i]->result_1;
+                    $row["dispensers"][$j]["start_2"] = $all[$i]->nozzle_2 - $all[$i]->result_2;
+                    $row["dispensers"][$j]["end_1"] = (int) $all[$i]->nozzle_1;
+                    $row["dispensers"][$j]["end_2"] = (int) $all[$i]->nozzle_2;
+                }
+                if ($j == 2) {
+                    $row["dispensers"][$j]["start_1"] = $all[$i]->nozzle_3 - $all[$i]->result_3;
+                    $row["dispensers"][$j]["start_2"] = $all[$i]->nozzle_4 - $all[$i]->result_4;
+                    $row["dispensers"][$j]["end_1"] = (int) $all[$i]->nozzle_3;
+                    $row["dispensers"][$j]["end_2"] = (int) $all[$i]->nozzle_4;
+                }
+                if ($j == 3) {
+                    $row["dispensers"][$j]["start_1"] = $all[$i]->nozzle_5 - $all[$i]->result_5;
+                    $row["dispensers"][$j]["start_2"] = $all[$i]->nozzle_6 - $all[$i]->result_6;
+                    $row["dispensers"][$j]["end_1"] = (int) $all[$i]->nozzle_5;
+                    $row["dispensers"][$j]["end_2"] = (int) $all[$i]->nozzle_6;
+                }
+                if ($j == 4) {
+                    $row["dispensers"][$j]["start_1"] = $all[$i]->nozzle_7 - $all[$i]->result_7;
+                    $row["dispensers"][$j]["start_2"] = $all[$i]->nozzle_8 - $all[$i]->result_8;
+                    $row["dispensers"][$j]["end_1"] = (int) $all[$i]->nozzle_7;
+                    $row["dispensers"][$j]["end_2"] = (int) $all[$i]->nozzle_8;
+                }
+            }
+
+            $row["dispensers"] = json_encode($row["dispensers"]);
+
+
+            $req = DB::table('app_report')
+                ->insertGetId([
+                    'station_id' => $all[$i]->station_id,
+                    'users' => $row["users"],
+                    'start_at' => $all[$i]->start_shift_at,
+                    'end_at' => $all[$i]->end_shift_at,
+                    'dispensers' => $row["dispensers"],
+                    'cash' => $all[$i]->card_cash,
+                    'contradiction' => $all[$i]->contradiction,
+                    'contradiction_flag' => $all[$i]->contradiction_flag,
+                    'modified_flag' => $all[$i]->modified_flag,
+                    'confirm' => $all[$i]->confirm,
+                ]);
+
+            $idList[$i] = $req;
+        }
+
+        return $idList;
     }
 }
