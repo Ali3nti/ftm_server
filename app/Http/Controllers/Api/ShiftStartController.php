@@ -213,6 +213,7 @@ class ShiftStartController extends Controller
             ->whereNot('id', $user_id)
             ->get();
 
+
         if ($getOperators) {
 
             $users = array();

@@ -14,7 +14,7 @@ class AppController extends Controller
     public function appInfo()
     {
 
-        $server_time = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $server_time = new DateTime('now',new DateTimeZone("Asia/Tehran"));
 
 
         $roles = DB::table('app_roles')

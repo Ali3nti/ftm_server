@@ -44,7 +44,7 @@ Route::namespace("Api")->prefix('')->group(function () {
     Route::post('supervisor_shift_data', [SupervisorController::class, 'supervisorShiftData']);
     Route::post('supervisor_report', [SupervisorController::class, 'SupervisorReport']);
     Route::post('operator_shift_data', [OperatorController::class, 'operatorShiftData']);
-    Route::post('timesheet', [UserController::class, 'Timesheet']);
+    Route::post('add_timesheet', [UserController::class, 'addTimesheet']);
     Route::post('get_timesheet', [UserController::class, 'getTimesheet']);
 });
 
@@ -52,4 +52,5 @@ Route::namespace("Dev")->prefix('')->group(function () {
     Route::get('change_date', [DevController::class, 'ChangeDate']);
     Route::get('serialize_operators', [DevController::class, 'SerializeOperators']);
     Route::get('tranform_to_report_table', [DevController::class, 'TranformToReportTable']);
+    Route::get('tranform_to_timesheet_table', [DevController::class, 'TranformToTimesheetTable']);
 });

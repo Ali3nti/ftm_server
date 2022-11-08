@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use app\Http\Controllers\Controller;
-use DateTime;
-use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -83,7 +81,7 @@ class AdminController extends Controller
         $city_id = $request->city_id;
         $number_of_dispenser = $request->number_of_dispenser;
 
-        $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $create_date = jdate();
 
         // $checkStationCode = DB::table('app_stations')
         //     ->where('code', $stationCode)

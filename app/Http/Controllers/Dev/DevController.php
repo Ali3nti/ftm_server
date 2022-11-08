@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dev;
 
-
 use app\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +11,6 @@ class DevController extends Controller
     {
         $all = DB::table('app_shift_data')
             ->get();
-
         for ($i = 0; $i < count($all); $i++) {
             $req = DB::table('app_shift_data')
                 ->where('id', $all[$i]->id)
@@ -21,55 +19,37 @@ class DevController extends Controller
                     'end_shift_at' => jdate($all[$i]->end_shift_at)
                 ]);
         }
-
         return 'ok';
     }
 
     public function SerializeOperators()
     {
-
         $all = DB::table('app_shift_data')
             ->get();
-
-
         for ($i = 0; $i < count($all); $i++) {
-
             $operator = $all[$i]->operators_id;
             $operators = array($operator, $operator);
             $opt = serialize($operators);
-
             $req = DB::table('app_shift_data')
                 ->where('id', $all[$i]->id)
                 ->update(['operators_id' => $opt]);
         }
-
         return 'ok';
     }
 
     public function TranformToReportTable()
     {
-
         $all = DB::table('app_shift_data')
             ->get();
-
-
         $idList = array();
-
         for ($i = 0; $i < count($all); $i++) {
-
             $row = array();
-
-            $operator = unserialize($all[$i]->operators_id);
-
-            $operators["creator"] = $operator[0];
-            $operators["assistant"] = $operator[1];
-
+            $operators["creator"] = $all[$i]->user_id;
+            $operators["assistant"] = $all[$i]->user_id;
             $row["users"] = json_encode($operators);
-
             $dispenserNum = DB::table('app_stations')
                 ->where('id', $all[$i]->station_id)
                 ->value('dispenser');
-
             for ($j = 1; $j <= $dispenserNum; $j++) {
                 if ($j == 1) {
                     $row["dispensers"][$j]["start_1"] = $all[$i]->nozzle_1 - $all[$i]->result_1;
@@ -96,10 +76,7 @@ class DevController extends Controller
                     $row["dispensers"][$j]["end_2"] = (int) $all[$i]->nozzle_8;
                 }
             }
-
             $row["dispensers"] = json_encode($row["dispensers"]);
-
-
             $req = DB::table('app_report')
                 ->insertGetId([
                     'station_id' => $all[$i]->station_id,
@@ -113,10 +90,28 @@ class DevController extends Controller
                     'modified_flag' => $all[$i]->modified_flag,
                     'confirm' => $all[$i]->confirm,
                 ]);
-
             $idList[$i] = $req;
         }
+        return $idList;
+    }
 
+    public function TranformToTimesheetTable()
+    {
+        $all = DB::table('app_shift_data')
+            ->get();
+        $idList = array();
+        for ($i = 0; $i < count($all); $i++) {
+            $req = DB::table('app_timesheet')
+                ->insertGetId([
+                    'station_id' => $all[$i]->station_id,
+                    'user_id' => $all[$i]->user_id,
+                    'shift_id' => $all[$i]->id,
+                    'start' => $all[$i]->start_shift_at,
+                    'end' => $all[$i]->end_shift_at,
+                    'status' => 2,
+                ]);
+            $idList[$i] = $req;
+        }
         return $idList;
     }
 }

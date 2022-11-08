@@ -21,7 +21,7 @@ class UserController extends Controller
         $city_id = $request->city_id;
         $station_id = $request->station_id;
 
-        $create_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $create_date = jdate();
 
         $filePath = "";
 
@@ -200,7 +200,7 @@ class UserController extends Controller
     {
 
         $user_id = $request->user_id;
-        $verified_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $verified_date = jdate();
 
         $user = DB::table('app_users')
             ->where('id', $user_id)
@@ -225,12 +225,12 @@ class UserController extends Controller
         }
     }
 
-    public function Timesheet(Request $request)
+    public function addTimesheet(Request $request)
     {
 
         $user_id = $request->user_id;
 
-        $current_time = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $current_time = jdate();
 
         $station = DB::table('app_users')
             ->where('id', $user_id)
@@ -276,7 +276,7 @@ class UserController extends Controller
         $user_id = $request->user_id;
 
         $getTimeSheet = DB::table('app_timesheet')
-        ->orderByDesc('id')
+        ->orderBy('start')
         ->where('user_id', $user_id)
         ->get();
 

@@ -16,7 +16,7 @@ class LoginController extends Controller
 
         $user_phone = $request->user_phone;
         // $device_id = $request->device_id;
-        $login_date = new DateTime('now', new DateTimeZone('Asia/Tehran'));
+        $login_date = jdate();
 
         $checkUser = DB::table('app_users')
             ->where('phone', $user_phone)
