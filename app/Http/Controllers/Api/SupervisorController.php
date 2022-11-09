@@ -34,7 +34,7 @@ class SupervisorController extends Controller
                 ->where('shift_id', $shift_id)
                 ->first();
 
-                $timesheet = array();
+            $timesheet = array();
 
             if ($getTimeSheet) {
                 $timesheet["user"] = getUser($getTimeSheet->user_id);
@@ -77,7 +77,7 @@ class SupervisorController extends Controller
                         // $inDay[$c]["users"]["creator"] = getUser($mUser["creator"]);
 
                         // if ($mUser["creator"] != $mUser["assistant"]) {
-                            // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
+                        // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
                         // }
 
                         $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
