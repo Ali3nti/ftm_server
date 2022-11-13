@@ -6,9 +6,9 @@ use app\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SupervisorController extends Controller
+class EmployeeController extends Controller
 {
-    public function SupervisorReport(Request $request)
+    public function EmployeeReport(Request $request)
     {
         function getUser(int $id)
         {
@@ -20,10 +20,6 @@ class SupervisorController extends Controller
             $station = DB::table('app_stations')->where('id', $user->station)->first();
             $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
                 ->where('id', $station->supervisor)->first();
-            $station->location = array(
-                "latitude" => substr($station->location, 0, 7),
-                "longitude" => substr($station->location, 10, 7)
-            );
             $user->station = $station;
             $user->city = DB::table('app_city')->where('id', $user->city)->first();
             $user->status = DB::table('app_status')->where('id', $user->status)->first();
@@ -38,7 +34,7 @@ class SupervisorController extends Controller
                 ->where('shift_id', $shift_id)
                 ->first();
 
-            $timesheet = array();
+                $timesheet = array();
 
             if ($getTimeSheet) {
                 $timesheet["user"] = getUser($getTimeSheet->user_id);
@@ -81,7 +77,7 @@ class SupervisorController extends Controller
                         // $inDay[$c]["users"]["creator"] = getUser($mUser["creator"]);
 
                         // if ($mUser["creator"] != $mUser["assistant"]) {
-                        // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
+                            // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
                         // }
 
                         $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
@@ -121,7 +117,7 @@ class SupervisorController extends Controller
         );
     }
 
-    public function supervisorShiftData(Request $request)
+    public function EmployeeShiftData(Request $request)
     {
         $station = $request->station_id;
 

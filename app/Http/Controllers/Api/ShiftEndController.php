@@ -13,6 +13,27 @@ class ShiftEndController extends Controller
 {
     public function End(Request $request)
     {
+        function addTimesheet(int $user_id, $date)
+        {
+
+            $checkLastTime = DB::table('app_timesheet')
+                ->orderByDesc('id')
+                ->where('user_id', $user_id)
+                ->first();
+
+            if ($checkLastTime != null && $checkLastTime->end == 0) {
+
+                $updateTimeSheet = DB::table('app_timesheet')
+                    ->where('id', $checkLastTime->id)
+                    ->update([
+                        'end' => $date,
+                        'status' => 2,
+                    ]);
+
+                return 1;
+            }
+        }
+
         $user = $request->user_id;
         $id = $request->id;
         $cash = $request->cash;
@@ -55,6 +76,9 @@ class ShiftEndController extends Controller
                             ->where('id', $user)
                             ->update(['status' => 4]);
 
+                        addTimesheet($user, $create_date);
+
+
                         return $message = array(
                             "status" => "1",
                             "message" => "Data has been set on shift data table successfully.",
@@ -80,7 +104,6 @@ class ShiftEndController extends Controller
                         ]);
 
                     if ($update) {
-
                         $updateStationStatus = DB::table('app_stations')
                             ->where('id', $row->station_id)
                             ->update(['status' => 1]);
@@ -88,6 +111,9 @@ class ShiftEndController extends Controller
                         $updateCreatorUserStatus = DB::table('app_users')
                             ->where('id', $user)
                             ->update(['status' => 1]);
+
+                        addTimesheet($user, $create_date);
+
 
                         return $message = array(
                             "status" => "1",
@@ -123,7 +149,6 @@ class ShiftEndController extends Controller
                     ]);
 
                 if ($update) {
-
                     $updateStationStatus = DB::table('app_stations')
                         ->where('id', $row->station_id)
                         ->update(['status' => 4]);
@@ -135,6 +160,9 @@ class ShiftEndController extends Controller
                     $updateCreatorUserStatus = DB::table('app_users')
                         ->where('id', $creator)
                         ->update(['status' => 4]);
+
+                    addTimesheet($user, $create_date);
+
 
                     return $message = array(
                         "status" => "1",
@@ -160,7 +188,6 @@ class ShiftEndController extends Controller
                     'confirm' => "11110"
                 ]);
             if ($update) {
-
                 $updateStationStatus = DB::table('app_stations')
                     ->where('id', $row->station_id)
                     ->update(['status' => 1]);
@@ -172,6 +199,8 @@ class ShiftEndController extends Controller
                 $updateFinisherUserStatus = DB::table('app_users')
                     ->where('station', $row->station_id)
                     ->update(['status' => 1]);
+
+                addTimesheet($user, $create_date);
 
                 return $message = array(
                     "status" => "1",

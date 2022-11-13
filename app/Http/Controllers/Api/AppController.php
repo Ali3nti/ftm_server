@@ -23,13 +23,27 @@ class AppController extends Controller
         $cities = DB::table('app_city')
             ->get();
 
-        $stations = DB::table('app_stations')
-            ->get();        
+        $stationsList = DB::table('app_stations')
+            ->get();
+
+            $stations = array();
             
-        // $supervisors = DB::table('app_users')
-        // ->select('id','first_name','last_name')
-        // ->where('role', 3 )
-        //     ->get();
+            foreach ( $stationsList as $row){
+                $row->supervisor = DB::table('app_users')
+                ->select('id', 'first_name', 'last_name')
+                ->where('id', $row->supervisor)
+                ->first();
+
+            $row->location = array(
+                "latitude" => substr($row->location, 0, 7),
+                "longitude" => substr($row->location, 10, 7)
+            );
+
+            $stations[] = $row;
+            
+            }
+            
+
 
         return $message = array(
             'status' => '1',
@@ -66,6 +80,18 @@ class AppController extends Controller
                 'message' => 'Return operators has error',
                 'data' => []
             );
+        }
+    }
+    
+    public function SendNotification(){
+
+        $notif = DB::table('app_notif')
+        ->where('visibility', 'show')
+        ->get();
+
+        if($notif){
+
+            return $notif;
         }
     }
 }

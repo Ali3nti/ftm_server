@@ -13,6 +13,38 @@ class ShiftStartController extends Controller
     public function Start(Request $request)
     {
 
+        function addTimesheet(int $user_id, int $station_id, int $shift_id, $date)
+        {
+
+            $checkLastTime = DB::table('app_timesheet')
+                ->orderByDesc('id')
+                ->where('user_id', $user_id)
+                ->first();
+
+            if ($checkLastTime != null && $checkLastTime->end == 0) {
+
+                $updateTimeSheet = DB::table('app_timesheet')
+                    ->where('id', $checkLastTime->id)
+                    ->update([
+                        'end' => $date,
+                        'status' => 2,
+                    ]);
+
+                return 1;
+            } else {
+                $addTimeSheet = DB::table('app_timesheet')
+                    ->insertGetId([
+                        'user_id' => $user_id,
+                        'station_id' => $station_id,
+                        'shift_id' => $shift_id,
+                        'start' => $date,
+                        'status' => 1,
+                    ]);
+
+                return 2;
+            }
+        }
+
         $station_id = $request->station_id;
         $user_creator_id = $request->user_creator_id;
         $user_assistant_id = $request->user_assistant_id;
@@ -74,12 +106,15 @@ class ShiftStartController extends Controller
                     ->where('id', $station_id)
                     ->update(['status' => 3]);
 
+                addTimesheet($user_assistant_id, $station_id, $lastShift->id, $create_date);
+
                 return $message = array(
                     "status" => "1",
                     "message" => "The shift confirmed successfully.",
                     "data" => []
                 );
             } else {
+
                 if ($user_creator_id == $user_assistant_id) { // One User
 
                     $shift_id = DB::table('app_report')
@@ -98,6 +133,8 @@ class ShiftStartController extends Controller
                     $changeUserCreatorStatus = DB::table('app_users')
                         ->where('id', $user_creator_id)
                         ->update(['status' => 3]);
+
+                    addTimesheet($user_creator_id, $station_id, $shift_id, $create_date);
                 } else { // Two User
 
                     $shift_id = DB::table('app_report')
@@ -120,6 +157,8 @@ class ShiftStartController extends Controller
                     $changeUserAssistantStatus = DB::table('app_users')
                         ->where('id', $user_assistant_id)
                         ->update(['status' => 2]);
+
+                    addTimesheet($user_creator_id, $station_id, $shift_id, $create_date);
                 }
 
                 return $message = array(
@@ -342,11 +381,11 @@ class ShiftStartController extends Controller
                         | Shift is started and not defined for this user.
                         |--------------------------------------------------------------------------
                         */
-                        // $userLastShift = DB::table('app_report')
-                        // ->orderByDesc('id')
-                        // ->where('station_id', $station_id)
-                        // ->where('station_id', $station_id)
-                        // ->first();
+                // $userLastShift = DB::table('app_report')
+                // ->orderByDesc('id')
+                // ->where('station_id', $station_id)
+                // ->where('station_id', $station_id)
+                // ->first();
                 $lastShift->users = json_decode($lastShift->users);
                 $lastShift->users->creator = getUser($lastShift->users->creator);
                 $lastShift->users->assistant = getUser($lastShift->users->assistant);
@@ -491,7 +530,7 @@ class ShiftStartController extends Controller
                 'message' => 'This shift for this user was ended but the station wait for other user.',
                 'data' => $data
             );
-        }else {
+        } else {
             return $message = array(
                 'status' => '404',
                 'message' => 'This Wrong0005.',

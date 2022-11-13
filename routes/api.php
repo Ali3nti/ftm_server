@@ -30,6 +30,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::namespace("Api")->prefix('')->group(function () {
     Route::get('app_info', [AppController::class, 'appInfo']);
+    Route::get('send_notification', [AppController::class, 'SendNotification']);
     Route::post('login', [LoginController::class, 'login']);
     Route::post('station_operators', [AppController::class, 'StationOperators']);
     Route::post('add_user', [UserController::class, 'addUser']);
@@ -46,7 +47,7 @@ Route::namespace("Api")->prefix('')->group(function () {
     Route::post('operator_report', [OperatorController::class, 'OperatorReport']);
     Route::post('operator_shift_data', [OperatorController::class, 'operatorShiftData']);
     Route::post('add_timesheet', [UserController::class, 'addTimesheet']);
-    Route::post('get_timesheet', [UserController::class, 'getTimesheet']);
+    Route::get('get_timesheet', [UserController::class, 'getTimesheet']);
 });
 
 Route::namespace("Dev")->prefix('')->group(function () {

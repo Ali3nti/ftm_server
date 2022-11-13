@@ -55,9 +55,49 @@ class OperatorController extends Controller
         $user = $request->user_id;
         $date = $request->date;
 
+        if ($date == "0") {
+
+            $operatorReport = array();
+
+            $timeSheet = DB::table('app_timesheet')
+                ->orderByDesc('id')
+                ->where('user_id', $user)
+                ->first();
+
+            $lastShift = DB::table('app_report')
+                ->where('id', $timeSheet->shift_id)
+                ->first();
+
+            $myLastShift["0"]["id"] = $lastShift->id;
+            $myLastShift["0"]["station_id"] =  $lastShift->station_id;
+
+                $myLastShift["0"]["timesheet"]["creator"] = getTimeSheet(
+                    $user,
+                    $lastShift->id
+                );
+     
+            $myLastShift["0"]["start_at"] =  $lastShift->start_at;
+            $myLastShift["0"]["end_at"] =  $lastShift->end_at;
+            $myLastShift["0"]["dispensers"] = json_decode( $lastShift->dispensers, true);
+            $myLastShift["0"]["cash"] =  $lastShift->cash;
+            $myLastShift["0"]["contradiction"] =  $lastShift->contradiction;
+            $myLastShift["0"]["contradiction_flag"] =  $lastShift->contradiction_flag;
+            $myLastShift["0"]["modified_flag"] =  $lastShift->modified_flag;
+            $myLastShift["0"]["confirm"] =  $lastShift->confirm;
+
+            $operatorReport["0"] = $myLastShift;
+
+            return $message = array(
+                "status" => "1",
+                "message" => "Data returned successfully.",
+                "data" => $operatorReport
+            );
+        }
+
         $date = str_replace('/', '-', $date);
 
-        $supervisorReport = array();
+
+        $operatorReport = array();
 
         $allShift = DB::table('app_report')
             ->where('station_id', $station)
@@ -77,7 +117,7 @@ class OperatorController extends Controller
             if ($shiftUserCreator == $user | $shiftUserAssistant == $user) {
 
 
-            if (str_contains($shiftDate, $date)) {  // if(str_starts_with($res1,$date)){
+                if (str_contains($shiftDate, $date)) {  // if(str_starts_with($res1,$date)){
 
 
 
@@ -111,7 +151,7 @@ class OperatorController extends Controller
                                             $mUser["creator"],
                                             $allShift[$j]->id
                                         );
-                                    }elseif($shiftUserAssistantt == $user){
+                                    } elseif ($shiftUserAssistantt == $user) {
                                         $inDay[$c]["timesheet"]["assistant"] = getTimeSheet(
                                             $mUser["assistant"],
                                             $allShift[$j]->id
@@ -134,7 +174,7 @@ class OperatorController extends Controller
                         }
                     }
 
-                    $supervisorReport[$day] = $inDay;
+                    $operatorReport[$day] = $inDay;
                 }
             }
         }
@@ -142,7 +182,7 @@ class OperatorController extends Controller
         return $message = array(
             "status" => "1",
             "message" => "Data returned successfully.",
-            "data" => $supervisorReport
+            "data" => $operatorReport
         );
     }
 

@@ -250,45 +250,62 @@ class UserController extends Controller
                     'status' => 2,
                 ]);
 
+                $updateUserStatus = DB::table('app_users')
+                ->where('id', $user_id)
+                ->update([
+                    'status' => 1
+                ]);
+
             return $message = array(
-                'status' => 1,
-                'message' => 'Timesheet is Closed!'
+                'status' => '1',
+                'message' => 'Timesheet is Close!'
             );
         } else {
             $addTimeSheet = DB::table('app_timesheet')
                 ->insertGetId([
                     'user_id' => $user_id,
                     'station_id' => $station->station,
+                    'shift_id' => 0,
                     'start' => $current_time,
                     'status' => 1,
                 ]);
 
+                $updateUserStatus = DB::table('app_users')
+                ->where('id', $user_id)
+                ->update([
+                    'status' => 3
+                ]);
+
             return $message = array(
-                'status' => 2,
-                'message' => 'Timesheet is Started!'
+                'status' => '2',
+                'message' => 'Timesheet is Open!'
             );
         }
     }
 
-    public function getTimeSheet(Request $request)
+    public function getTimeSheet()
     {
 
-        $user_id = $request->user_id;
-
         $getTimeSheet = DB::table('app_timesheet')
-        ->orderBy('start')
-        ->where('user_id', $user_id)
+        ->orderByDesc('id')
         ->get();
+
+        foreach ($getTimeSheet as $row){
+            // $row->user_id = DB::table('app_users')->where('id', $row->user_id)->first();
+            // $row->station_id = DB::table('app_stations')->where('id', $row->station_id)->first();
+        }
+
+
 
         if($getTimeSheet->isNotEmpty()){
             return $message = array(
-                'status' => 1,
+                'status' => '1',
                 'message'=> 'Timesheet is returned',
                 'data' => $getTimeSheet
             );
         }else{
             return $message = array(
-                'status' => 2,
+                'status' => '2',
                 'message'=> 'Timesheet for this user is Empty',
                 'data' => []
             );
