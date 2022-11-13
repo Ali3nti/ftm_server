@@ -34,7 +34,7 @@ class EmployeeController extends Controller
                 ->where('shift_id', $shift_id)
                 ->first();
 
-                $timesheet = array();
+            $timesheet = array();
 
             if ($getTimeSheet) {
                 $timesheet["user"] = getUser($getTimeSheet->user_id);
@@ -77,7 +77,7 @@ class EmployeeController extends Controller
                         // $inDay[$c]["users"]["creator"] = getUser($mUser["creator"]);
 
                         // if ($mUser["creator"] != $mUser["assistant"]) {
-                            // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
+                        // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
                         // }
 
                         $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
@@ -117,70 +117,37 @@ class EmployeeController extends Controller
         );
     }
 
-    public function EmployeeShiftData(Request $request)
+    public function EmployeeStatus(Request $request)
     {
-        $station = $request->station_id;
+        $user = $request->user_id;
 
-        $row = DB::table('app_shift_data')
+        $status = DB::table('app_timesheet')
             ->orderBy('id', 'desc')
-            ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
-            ->select('app_shift_data.*', 'app_stations.name as station_name')
-            ->where('station_id', $station)
-            ->get();
+            ->where('user_id', $user)
+            ->value('status');
 
 
 
-        if ($row) {
+        if ($status) {
 
-            foreach ($row as $edit) {
+            if ($status == 1) {
 
-                $name = DB::table('app_users')->select('first_name', 'last_name')->where('id', $edit->user_id)->first();
-                $edit->user_name = $name->first_name . ' ' . $name->last_name;
-                $operators = unserialize($edit->operators_id);
-                $edit->operators_id = $operators[1];
+                return $message = array(
+                    "status" => "1",
+                    "message" => "is started."
 
-                $user = DB::table('app_users')
-                    ->where('id', $operators[1])
-                    ->first();
+                );
+            } elseif ($status == 2) {
+                return $message = array(
+                    "status" => "2",
+                    "message" => "can started."
 
-
-
-                if ($user) {
-
-                    $user->role = DB::table('app_roles')->where('id', $user->role)->first();
-
-                    $station = DB::table('app_stations')->where('id', $user->station)->first();
-                    $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
-                    $user->station = $station;
-
-                    // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
-                    $user->city = DB::table('app_city')->where('id', $user->city)->first();
-                    $user->status = DB::table('app_status')->where('id', $user->status)->first();
-
-                    $edit->operators = $user;
-                }
-                // else{
-
-                //     return $message = array(
-                //         'status' => '0',
-                //         'message' => 'User is blocked.',
-                //         'data' => 'null'
-                //     );
-                // }
-
+                );
             }
-
-            return $message = array(
-                "status" => "1",
-                "message" => "Data returned successfully.",
-                "data" => $row
-
-            );
         } else {
             return $message = array(
                 "status" => "0",
-                "message" => "Error",
-                "data" => []
+                "message" => "Error"
             );
         }
     }
