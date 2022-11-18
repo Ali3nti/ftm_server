@@ -97,21 +97,64 @@ class DevController extends Controller
 
     public function TranformToTimesheetTable()
     {
-        $all = DB::table('app_shift_data')
+        $all = DB::table('app_report')
             ->get();
         $idList = array();
         for ($i = 0; $i < count($all); $i++) {
+            $users = json_decode($all[$i]->users);
             $req = DB::table('app_timesheet')
                 ->insertGetId([
                     'station_id' => $all[$i]->station_id,
-                    'user_id' => $all[$i]->user_id,
+                    'user_id' => $users->creator,
                     'shift_id' => $all[$i]->id,
-                    'start' => $all[$i]->start_shift_at,
-                    'end' => $all[$i]->end_shift_at,
+                    'start' => $all[$i]->start_at,
+                    'end' => $all[$i]->end_at,
                     'status' => 2,
                 ]);
             $idList[$i] = $req;
         }
         return $idList;
+    }
+    
+    public function IdChanger()
+    {
+        $all = DB::table('app_timesheet')
+            ->get();
+
+        for ($i = 0; $i < count($all); $i++) {
+                $req = DB::table('app_timesheet')
+                ->where('user_id', 4)
+                ->update([
+                    'user_id' => 10
+                ]);
+        }
+        return "ok";
+    }    
+    
+    public function IdReportChanger()
+    {
+        $all = DB::table('app_report')
+            ->get();
+
+        for ($i = 0; $i < count($all); $i++) {
+
+                $users = json_decode($all[$i]->users);
+                if($users->creator == 4){
+                    $users->creator = 10;
+                    $users->assistant = 10;
+
+                    $user = json_encode($users);
+
+                    $req = DB::table('app_report')
+                    ->where('id', $all[$i]->id)
+                    ->update([
+                        'users' => $user
+                    ]);
+                }
+                
+
+
+        }
+        return "ok";
     }
 }

@@ -41,6 +41,8 @@ class OperatorController extends Controller
             $timesheet = array();
 
             if ($getTimeSheet) {
+
+                $timesheet["id"] = $getTimeSheet->id;
                 $timesheet["user"] = getUser($getTimeSheet->user_id);
                 $timesheet["start"] = $getTimeSheet->start;
                 $timesheet["end"] = $getTimeSheet->end;
@@ -109,17 +111,21 @@ class OperatorController extends Controller
 
             $shiftDate = $allShift[$i]->start_at;
 
+            $users = json_decode($allShift[$i]->users, true);
 
-            $users = json_decode($allShift[$i]->users);
-            $shiftUserCreator = $users->creator;
-            $shiftUserAssistant = $users->assistant;
+            $shiftUserCreator = $users['creator'];
 
-            if ($shiftUserCreator == $user | $shiftUserAssistant == $user) {
+            isset($users['assistant']) 
+            ? $shiftUserAssistant = $users['assistant']
+            : $shiftUserAssistant = null;
 
+            isset($userss['finisher']) 
+            ? $shiftUserFinisher = $users['finisher'] 
+            : $shiftUserFinisher = null;
+
+            if ($shiftUserCreator == $user | $shiftUserAssistant == $user | $shiftUserFinisher == $user) {
 
                 if (str_contains($shiftDate, $date)) {  // if(str_starts_with($res1,$date)){
-
-
 
                     $day = substr($shiftDate, 8, 2);
                     $inDay = array();
@@ -128,24 +134,32 @@ class OperatorController extends Controller
 
                         $res2 = $allShift[$j]->start_at;
 
-                        $userss = json_decode($allShift[$j]->users);
-                        $shiftUserCreatorr = $userss->creator;
-                        $shiftUserAssistantt = $userss->assistant;
+                        $userss = json_decode($allShift[$j]->users, true);
+
+                        $shiftUserCreatorr = $userss['creator'];
+
+                        isset($userss['assistant']) 
+                        ? $shiftUserAssistantt = $userss['assistant']
+                        : $shiftUserAssistantt = null;
+            
+                        isset($userss['finisher']) 
+                        ? $shiftUserFinisherr = $userss['finisher'] 
+                        : $shiftUserFinisherr = null;
 
                         if (str_contains($res2, $date) & substr($allShift[$j]->start_at, 8, 2) == $day) {
 
-                            if ($shiftUserCreatorr == $user | $shiftUserAssistantt == $user) {
+                            if ($shiftUserCreatorr == $user | $shiftUserAssistantt == $user | $shiftUserFinisherr == $user) {
 
                                 $inDay[$c]["id"] = $allShift[$j]->id;
                                 $inDay[$c]["station_id"] = $allShift[$j]->station_id;
                                 $mUser = json_decode($allShift[$j]->users, true);
 
-                                if ($shiftUserCreatorr == $shiftUserAssistantt) {
-                                    $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
-                                        $mUser["creator"],
-                                        $allShift[$j]->id
-                                    );
-                                } else {
+                                // if ($shiftUserCreatorr == $shiftUserAssistantt) {
+                                //     $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
+                                //         $mUser["creator"],
+                                //         $allShift[$j]->id
+                                //     );
+                                // } else {
                                     if ($shiftUserCreatorr == $user) {
                                         $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
                                             $mUser["creator"],
@@ -156,8 +170,13 @@ class OperatorController extends Controller
                                             $mUser["assistant"],
                                             $allShift[$j]->id
                                         );
-                                    }
-                                }
+                                    } elseif ($shiftUserFinisherr == $user) {
+                                        $inDay[$c]["timesheet"]["finisher"] = getTimeSheet(
+                                            $mUser["finisher"],
+                                            $allShift[$j]->id
+                                        );
+                                    } 
+                                // }
 
                                 $inDay[$c]["start_at"] = $allShift[$j]->start_at;
                                 $inDay[$c]["end_at"] = $allShift[$j]->end_at;

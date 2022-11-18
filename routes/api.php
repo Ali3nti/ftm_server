@@ -58,11 +58,14 @@ Route::namespace("Api")->prefix('')->group(function () {
     Route::post('start_shift',      [ShiftStartController::class, 'start']);
 
     Route::post('end_shift',        [ShiftEndController::class, 'end']);
+    Route::post('failure_shift',        [ShiftEndController::class, 'FailureShift']);
 });
 
 Route::namespace("Dev")->prefix('')->group(function () {
 
     Route::get('change_date',                 [DevController::class, 'ChangeDate']);
+    Route::get('id_changer',                 [DevController::class, 'IdChanger']);
+    Route::get('id_report_changer',                 [DevController::class, 'IdReportChanger']);
     Route::get('serialize_operators',         [DevController::class, 'SerializeOperators']);
     Route::get('tranform_to_report_table',    [DevController::class, 'TranformToReportTable']);
     Route::get('tranform_to_timesheet_table', [DevController::class, 'TranformToTimesheetTable']);

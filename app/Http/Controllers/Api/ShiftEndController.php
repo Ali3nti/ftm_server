@@ -60,6 +60,7 @@ class ShiftEndController extends Controller
                             'dispensers' => $dispenser_json,
                             'cash' => $cash,
                             'confirm' => "11100",
+                            'update_at' => $create_date
                         ]);
 
                     if ($update) {
@@ -73,7 +74,7 @@ class ShiftEndController extends Controller
                             ->update(['status' => 5]);
 
                         $updateAssistantUserStatus = DB::table('app_users')
-                            ->where('id', $user)
+                            ->where('id', $users->assistant)
                             ->update(['status' => 4]);
 
                         addTimesheet($user, $create_date);
@@ -101,6 +102,7 @@ class ShiftEndController extends Controller
                             'dispensers' => $dispenser_json,
                             'cash' => $cash,
                             'confirm' => "11110",
+                            'update_at' => $create_date
                         ]);
 
                     if ($update) {
@@ -132,20 +134,21 @@ class ShiftEndController extends Controller
                 }
             } else {
                 $creator = $users->creator;
-                $users = json_encode([
-                    'creator' => $users->creator,
-                    // 'finisher' => $user
-                    'assistant' => $user
+                $newUsers = json_encode([
+                    'creator' => $creator,
+                    'finisher' => $user
+                    // 'assistant' => $user
                 ]);
 
                 $update = DB::table('app_report')
                     ->where('id', $id)
                     ->update([
-                        'users' => $users,
+                        'users' => $newUsers,
                         'end_at' => $create_date,
                         'dispensers' => $dispenser_json,
                         'cash' => $cash,
                         'confirm' => "11100",
+                        'update_at' => $create_date
                     ]);
 
                 if ($update) {
@@ -185,7 +188,8 @@ class ShiftEndController extends Controller
                 ->where('id', $id)
                 ->update([
                     'end_at' => $create_date,
-                    'confirm' => "11110"
+                    'confirm' => "11110",
+                    'update_at' => $create_date
                 ]);
             if ($update) {
                 $updateStationStatus = DB::table('app_stations')
@@ -216,6 +220,194 @@ class ShiftEndController extends Controller
                     "data" => []
                 );
             }
+        }
+    }    
+    
+    public function FailureShift(Request $request)
+    {
+        function addToTimesheet(int $user_id, $date)
+        {
+
+            $checkLastTime = DB::table('app_timesheet')
+                ->orderByDesc('id')
+                ->where('user_id', $user_id)
+                ->first();
+
+            if ($checkLastTime != null && $checkLastTime->end == 0) {
+
+                $updateTimeSheet = DB::table('app_timesheet')
+                    ->where('id', $checkLastTime->id)
+                    ->update([
+                        'end' => $date,
+                        'status' => 2,
+                    ]);
+
+                return 1;
+            }
+        }
+
+        $user = $request->user_id;
+        $id = $request->id;
+        $create_date = jdate();
+
+        $row = DB::table('app_report')
+        ->where('id', $id)
+        ->first();
+
+        $dispenser_json = json_decode($row->dispensers, true);
+
+        for ($j = 1; $j <= count($dispenser_json); $j++) {
+
+                $dispenser_json[$j]["end_1"] = $dispenser_json[$j]["start_1"];
+                $dispenser_json[$j]["end_2"] = $dispenser_json[$j]["start_2"];
+
+        }
+
+        $failureDispenser = json_encode($dispenser_json);
+        
+        $users = json_decode($row->users);
+
+        if ($row->confirm == '11000') {
+
+            if ($users->creator == $user) {
+
+                if ($users->creator != $users->assistant) {
+
+                    $update = DB::table('app_report')
+                        ->where('id', $id)
+                        ->update([
+                            'end_at' => $create_date,
+                            'dispensers' => $failureDispenser,
+                            'cash' => 0,
+                            'confirm' => "11100",
+                            'update_at' => $create_date
+                        ]);
+
+                    if ($update) {
+
+                        $updateStationStatus = DB::table('app_stations')
+                            ->where('id', $row->station_id)
+                            ->update(['status' => 4]);
+
+                        $updateCreatorUserStatus = DB::table('app_users')
+                            ->where('id', $user)
+                            ->update(['status' => 5]);
+
+                        $updateAssistantUserStatus = DB::table('app_users')
+                            ->where('id', $users->assistant)
+                            ->update(['status' => 4]);
+
+                            addToTimesheet($user, $create_date);
+
+
+                        return $message = array(
+                            "status" => "1",
+                            "message" => "Data has been set on shift data table successfully.",
+                            "data" => [
+                                "shift_id" => $row
+                            ]
+                        );
+                    } else {
+                        return $message = array(
+                            "status" => "0",
+                            "message" => "Error1",
+                            "data" => []
+                        );
+                    }
+                } else {
+                    $update = DB::table('app_report')
+                        ->where('id', $id)
+                        ->update([
+                            'end_at' => $create_date,
+                            'dispensers' => $failureDispenser,
+                            'cash' => 0,
+                            'confirm' => "11110",
+                            'update_at' => $create_date
+                        ]);
+
+                    if ($update) {
+                        $updateStationStatus = DB::table('app_stations')
+                            ->where('id', $row->station_id)
+                            ->update(['status' => 1]);
+
+                        $updateCreatorUserStatus = DB::table('app_users')
+                            ->where('id', $user)
+                            ->update(['status' => 1]);
+
+                            addToTimesheet($user, $create_date);
+
+
+                        return $message = array(
+                            "status" => "1",
+                            "message" => "Data has been set on shift data table successfully.",
+                            "data" => [
+                                "shift_id" => $row
+                            ]
+                        );
+                    } else {
+                        return $message = array(
+                            "status" => "0",
+                            "message" => "Error2",
+                            "data" => []
+                        );
+                    }
+                }
+            } else {
+                $creator = $users->creator;
+                $users = json_encode([
+                    'creator' => $users->creator,
+                    // 'finisher' => $user
+                    'assistant' => $user
+                ]);
+
+                $update = DB::table('app_report')
+                    ->where('id', $id)
+                    ->update([
+                        'users' => $users,
+                        'end_at' => $create_date,
+                        'dispensers' => $failureDispenser,
+                        'cash' => 0,
+                        'confirm' => "11100",
+                        'update_at' => $create_date
+                    ]);
+
+                if ($update) {
+                    $updateStationStatus = DB::table('app_stations')
+                        ->where('id', $row->station_id)
+                        ->update(['status' => 4]);
+
+                    $updateFinisherUserStatus = DB::table('app_users')
+                        ->where('id', $user)
+                        ->update(['status' => 5]);
+
+                    $updateCreatorUserStatus = DB::table('app_users')
+                        ->where('id', $creator)
+                        ->update(['status' => 4]);
+
+                        addToTimesheet($user, $create_date);
+
+
+                    return $message = array(
+                        "status" => "1",
+                        "message" => "Data has been set on shift data table successfully.",
+                        "data" => [
+                            "shift_id" => $row
+                        ]
+                    );
+                } else {
+                    return $message = array(
+                        "status" => "0",
+                        "message" => "Error3",
+                        "data" => []
+                    );
+                }
+            }
+        } else{
+            return $message = array(
+                "status" => "0",
+                "message" => "Error4",
+                "data" => []
+            );
         }
     }
 }

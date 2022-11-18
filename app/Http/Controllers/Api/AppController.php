@@ -29,15 +29,11 @@ class AppController extends Controller
             $stations = array();
             
             foreach ( $stationsList as $row){
-                $row->supervisor = DB::table('app_users')
-                ->select('id', 'first_name', 'last_name')
-                ->where('id', $row->supervisor)
-                ->first();
 
-            $row->location = array(
-                "latitude" => substr($row->location, 0, 7),
-                "longitude" => substr($row->location, 10, 7)
-            );
+                
+                $row->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
+                    ->where('id', $row->supervisor)->first();
+
 
             $stations[] = $row;
             

@@ -70,22 +70,33 @@ class ShiftStartController extends Controller
             ->where('station_id', $station_id)
             ->first();
 
+        $lastDispenser = json_decode($lastShift->dispensers, true);
+
+
+
         if ($contradiction) {
+            if ($lastDispenser[1]["start_1"] == 0 & $lastDispenser[1]["end_1"] == 0) {
+                $delete = DB::table('app_report')
+                    ->where('id', $lastShift->id)
+                    ->delete();
+            } else {
 
-            $conflict = 0;
-            $lastDispenser = json_decode($lastShift->dispensers, true);
-            for ($i = 1; $i <= count($lastDispenser); $i++) {
-                $conflict +=  $lastDispenser[$i]["end_1"] - $dispenser_json[$i]["start_1"];
-                $conflict +=  $lastDispenser[$i]["end_2"] - $dispenser_json[$i]["start_2"];
+                $conflict = 0;
+
+                for ($i = 1; $i <= count($lastDispenser); $i++) {
+                    $conflict +=  $lastDispenser[$i]["end_1"] - $dispenser_json[$i]["start_1"];
+                    $conflict +=  $lastDispenser[$i]["end_2"] - $dispenser_json[$i]["start_2"];
+                }
+
+                $conflict = $conflict * 6568;
+                $checkStation = DB::table('app_report')
+                    ->where('id', $lastShift->id)
+                    ->update([
+                        'contradiction_flag' => 1,
+                        'contradiction' => $conflict,
+                        'update_at' => $create_date
+                    ]);
             }
-
-            $conflict = $conflict * 6568;
-            $checkStation = DB::table('app_report')
-                ->where('id', $lastShift->id)
-                ->update([
-                    'contradiction_flag' => 1,
-                    'contradiction' => $conflict
-                ]);
         }
 
         $dispenser_json = json_encode($dispenser_json);
@@ -96,7 +107,9 @@ class ShiftStartController extends Controller
 
                 $confirm = DB::table('app_report')
                     ->where('id', $lastShift->id)
-                    ->update(['confirm' => '11000']);
+                    ->update(['confirm' => '11000',
+                    'update_at' => $create_date
+                ]);
 
                 $changeUserAssistantStatus = DB::table('app_users')
                     ->where('id', $user_assistant_id)
@@ -125,6 +138,7 @@ class ShiftStartController extends Controller
                             'dispensers' => $dispenser_json,
                             'modified_flag' => $contradiction,
                             'confirm' => "11000",
+                            'update_at' => $create_date
                         ]);
                     $changeStationStatus = DB::table('app_stations')
                         ->where('id', $station_id)
@@ -145,6 +159,7 @@ class ShiftStartController extends Controller
                             'dispensers' => $dispenser_json,
                             'modified_flag' => $contradiction,
                             'confirm' => "10000",
+                            'update_at' => $create_date
                         ]);
                     $changeStationStatus = DB::table('app_stations')
                         ->where('id', $station_id)
@@ -311,9 +326,18 @@ class ShiftStartController extends Controller
                     | Last Shift is exist.
                     |--------------------------------------------------------------------------
                     */
-                    $lastShift->users = json_decode($lastShift->users);
-                    $lastShift->users->creator = getUser($lastShift->users->creator);
-                    $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                    $lastShift->users = json_decode($lastShift->users, true);
+
+                    $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+        
+                    isset($lastShift->users['finisher']) 
+                    ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                    : null;
+        
+                    isset($lastShift->users['assistant']) 
+                    ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                    : null;
+
                     $lastShift->dispensers = json_decode($lastShift->dispensers);
                     $data['shift'] = $lastShift;
                     return $message = array(
@@ -386,9 +410,18 @@ class ShiftStartController extends Controller
                 // ->where('station_id', $station_id)
                 // ->where('station_id', $station_id)
                 // ->first();
-                $lastShift->users = json_decode($lastShift->users);
-                $lastShift->users->creator = getUser($lastShift->users->creator);
-                $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                $lastShift->users = json_decode($lastShift->users, true);
+
+                $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+    
+                isset($lastShift->users['finisher']) 
+                ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                : null;
+    
+                isset($lastShift->users['assistant']) 
+                ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                : null;
+
                 $lastShift->dispensers = json_decode($lastShift->dispensers);
 
                 $data['shift'] = $lastShift;
@@ -409,9 +442,18 @@ class ShiftStartController extends Controller
                 */
             if ($lastShift) {
 
-                $lastShift->users = json_decode($lastShift->users);
-                $lastShift->users->creator = getUser($lastShift->users->creator);
-                $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                $lastShift->users = json_decode($lastShift->users, true);
+
+                $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+    
+                isset($lastShift->users['finisher']) 
+                ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                : null;
+    
+                isset($lastShift->users['assistant']) 
+                ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                : null;
+
                 $lastShift->dispensers = json_decode($lastShift->dispensers);
                 $data['shift'] = $lastShift;
 
@@ -442,9 +484,18 @@ class ShiftStartController extends Controller
                 */
                 if ($lastShift) {
 
-                    $lastShift->users = json_decode($lastShift->users);
-                    $lastShift->users->creator = getUser($lastShift->users->creator);
-                    $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                    $lastShift->users = json_decode($lastShift->users, true);
+
+                    $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+        
+                    isset($lastShift->users['finisher']) 
+                    ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                    : null;
+        
+                    isset($lastShift->users['assistant']) 
+                    ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                    : null;
+
                     $lastShift->dispensers = json_decode($lastShift->dispensers);
                     $data['shift'] = $lastShift;
 
@@ -468,9 +519,18 @@ class ShiftStartController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                $lastShift->users = json_decode($lastShift->users);
-                $lastShift->users->creator = getUser($lastShift->users->creator);
-                $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                $lastShift->users = json_decode($lastShift->users, true);
+
+                $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+    
+                isset($lastShift->users['finisher']) 
+                ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                : null;
+    
+                isset($lastShift->users['assistant']) 
+                ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                : null;
+
                 $lastShift->dispensers = json_decode($lastShift->dispensers);
                 $data['shift'] = $lastShift;
 
@@ -495,9 +555,18 @@ class ShiftStartController extends Controller
                 */
             if ($lastShift) {
 
-                $lastShift->users = json_decode($lastShift->users);
-                $lastShift->users->creator = getUser($lastShift->users->creator);
-                $lastShift->users->assistant = getUser($lastShift->users->assistant);
+                $lastShift->users = json_decode($lastShift->users, true);
+
+                $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+    
+                isset($lastShift->users['finisher']) 
+                ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+                : null;
+    
+                isset($lastShift->users['assistant']) 
+                ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+                : null;
+
                 $lastShift->dispensers = json_decode($lastShift->dispensers);
 
                 $data['shift'] = $lastShift;
@@ -519,9 +588,18 @@ class ShiftStartController extends Controller
                         | Shift is not finished.
                         |--------------------------------------------------------------------------
                         */
-            $lastShift->users = json_decode($lastShift->users);
-            $lastShift->users->creator = getUser($lastShift->users->creator);
-            $lastShift->users->assistant = getUser($lastShift->users->assistant);
+            $lastShift->users = json_decode($lastShift->users, true);
+
+            $lastShift->users['creator'] = getUser($lastShift->users['creator']);
+
+            isset($lastShift->users['finisher']) 
+            ? $lastShift->users['finisher'] = getUser($lastShift->users['finisher']) 
+            : null;
+
+            isset($lastShift->users['assistant']) 
+            ? $lastShift->users['assistant'] = getUser($lastShift->users['assistant']) 
+            : null;
+
             $lastShift->dispensers = json_decode($lastShift->dispensers);
 
             $data['shift'] = $lastShift;

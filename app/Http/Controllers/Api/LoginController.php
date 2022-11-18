@@ -49,10 +49,6 @@ class LoginController extends Controller
                     ->select('id', 'first_name', 'last_name')
                     ->where('id', $station->supervisor)
                     ->first();
-                $station->location = array(
-                    "latitude" => substr($station->location, 0, 7),
-                    "longitude" => substr($station->location, 10, 7)
-                );
 
                 $user->station = $station;
 

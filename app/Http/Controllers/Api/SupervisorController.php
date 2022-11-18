@@ -20,10 +20,6 @@ class SupervisorController extends Controller
             $station = DB::table('app_stations')->where('id', $user->station)->first();
             $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
                 ->where('id', $station->supervisor)->first();
-            $station->location = array(
-                "latitude" => substr($station->location, 0, 7),
-                "longitude" => substr($station->location, 10, 7)
-            );
             $user->station = $station;
             $user->city = DB::table('app_city')->where('id', $user->city)->first();
             $user->status = DB::table('app_status')->where('id', $user->status)->first();
@@ -41,6 +37,8 @@ class SupervisorController extends Controller
             $timesheet = array();
 
             if ($getTimeSheet) {
+
+                $timesheet["id"] = $getTimeSheet->id;
                 $timesheet["user"] = getUser($getTimeSheet->user_id);
                 $timesheet["start"] = $getTimeSheet->start;
                 $timesheet["end"] = $getTimeSheet->end;
@@ -78,22 +76,41 @@ class SupervisorController extends Controller
                         $inDay[$c]["id"] = $allShift[$j]->id;
                         $inDay[$c]["station_id"] = $allShift[$j]->station_id;
                         $mUser = json_decode($allShift[$j]->users, true);
-                        // $inDay[$c]["users"]["creator"] = getUser($mUser["creator"]);
 
-                        // if ($mUser["creator"] != $mUser["assistant"]) {
-                        // $inDay[$c]["users"]["assistant"] = getUser($mUser["assistant"]);
-                        // }
+                        $shiftUserCreator = $mUser["creator"];
 
-                        $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
-                            $mUser["creator"],
-                            $allShift[$j]->id
-                        );
+                        isset($mUser['assistant'])
+                            ? $shiftUserAssistant = $mUser['assistant']
+                            : $shiftUserAssistant = null;
 
-                        if ($mUser["creator"] != $mUser["assistant"]) {
-                            $inDay[$c]["timesheet"]["assistant"] = getTimeSheet(
-                                $mUser["assistant"],
+                        isset($mUser['finisher'])
+                            ? $shiftUserFinisher = $mUser['finisher']
+                            : $shiftUserFinisher = null;
+
+                        if ($shiftUserCreator == $shiftUserAssistant) {
+
+                            $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
+                                $shiftUserCreator,
                                 $allShift[$j]->id
                             );
+                        } else {
+                            $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
+                                $shiftUserCreator,
+                                $allShift[$j]->id
+                            );
+                            
+                            if ($shiftUserFinisher) {
+
+                                $inDay[$c]["timesheet"]["finisher"] = getTimeSheet(
+                                    $shiftUserFinisher,
+                                    $allShift[$j]->id
+                                );
+                            } elseif ($shiftUserAssistant) {
+                                $inDay[$c]["timesheet"]["assistant"] = getTimeSheet(
+                                    $shiftUserAssistant,
+                                    $allShift[$j]->id
+                                );
+                            }
                         }
 
                         $inDay[$c]["start_at"] = $allShift[$j]->start_at;
@@ -121,71 +138,71 @@ class SupervisorController extends Controller
         );
     }
 
-    public function supervisorShiftData(Request $request)
-    {
-        $station = $request->station_id;
+    // public function supervisorShiftData(Request $request)
+    // {
+    //     $station = $request->station_id;
 
-        $row = DB::table('app_shift_data')
-            ->orderBy('id', 'desc')
-            ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
-            ->select('app_shift_data.*', 'app_stations.name as station_name')
-            ->where('station_id', $station)
-            ->get();
-
-
-
-        if ($row) {
-
-            foreach ($row as $edit) {
-
-                $name = DB::table('app_users')->select('first_name', 'last_name')->where('id', $edit->user_id)->first();
-                $edit->user_name = $name->first_name . ' ' . $name->last_name;
-                $operators = unserialize($edit->operators_id);
-                $edit->operators_id = $operators[1];
-
-                $user = DB::table('app_users')
-                    ->where('id', $operators[1])
-                    ->first();
+    //     $row = DB::table('app_shift_data')
+    //         ->orderBy('id', 'desc')
+    //         ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
+    //         ->select('app_shift_data.*', 'app_stations.name as station_name')
+    //         ->where('station_id', $station)
+    //         ->get();
 
 
 
-                if ($user) {
+    //     if ($row) {
 
-                    $user->role = DB::table('app_roles')->where('id', $user->role)->first();
+    //         foreach ($row as $edit) {
 
-                    $station = DB::table('app_stations')->where('id', $user->station)->first();
-                    $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
-                    $user->station = $station;
+    //             $name = DB::table('app_users')->select('first_name', 'last_name')->where('id', $edit->user_id)->first();
+    //             $edit->user_name = $name->first_name . ' ' . $name->last_name;
+    //             $operators = unserialize($edit->operators_id);
+    //             $edit->operators_id = $operators[1];
 
-                    // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
-                    $user->city = DB::table('app_city')->where('id', $user->city)->first();
-                    $user->status = DB::table('app_status')->where('id', $user->status)->first();
+    //             $user = DB::table('app_users')
+    //                 ->where('id', $operators[1])
+    //                 ->first();
 
-                    $edit->operators = $user;
-                }
-                // else{
 
-                //     return $message = array(
-                //         'status' => '0',
-                //         'message' => 'User is blocked.',
-                //         'data' => 'null'
-                //     );
-                // }
 
-            }
+    //             if ($user) {
 
-            return $message = array(
-                "status" => "1",
-                "message" => "Data returned successfully.",
-                "data" => $row
+    //                 $user->role = DB::table('app_roles')->where('id', $user->role)->first();
 
-            );
-        } else {
-            return $message = array(
-                "status" => "0",
-                "message" => "Error",
-                "data" => []
-            );
-        }
-    }
+    //                 $station = DB::table('app_stations')->where('id', $user->station)->first();
+    //                 $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
+    //                 $user->station = $station;
+
+    //                 // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
+    //                 $user->city = DB::table('app_city')->where('id', $user->city)->first();
+    //                 $user->status = DB::table('app_status')->where('id', $user->status)->first();
+
+    //                 $edit->operators = $user;
+    //             }
+    //             // else{
+
+    //             //     return $message = array(
+    //             //         'status' => '0',
+    //             //         'message' => 'User is blocked.',
+    //             //         'data' => 'null'
+    //             //     );
+    //             // }
+
+    //         }
+
+    //         return $message = array(
+    //             "status" => "1",
+    //             "message" => "Data returned successfully.",
+    //             "data" => $row
+
+    //         );
+    //     } else {
+    //         return $message = array(
+    //             "status" => "0",
+    //             "message" => "Error",
+    //             "data" => []
+    //         );
+    //     }
+    // }
 }
