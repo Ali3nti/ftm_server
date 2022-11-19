@@ -13,6 +13,7 @@ class LoginController extends Controller
     {
 
         $user_phone = $request->user_phone;
+        $location = $request->location;
         // $device_id = $request->device_id;
         $login_date = jdate();
 
@@ -33,7 +34,11 @@ class LoginController extends Controller
 
             $update = DB::table('app_users')
                 ->where('phone', $user_phone)
-                ->update(['otp_value' => $otpval, "update_at" => $login_date]);
+                ->update([
+                    'otp_value' => $otpval,
+                    'last_location' => $location,
+                     "update_at" => $login_date
+                    ]);
 
             $user = DB::table('app_users')
                 ->where('phone', $user_phone)
