@@ -14,6 +14,7 @@ class LoginController extends Controller
 
         $user_phone = $request->user_phone;
         $location = $request->location;
+        $device_info = $request->device_info;
         // $device_id = $request->device_id;
         $login_date = jdate();
 
@@ -37,6 +38,7 @@ class LoginController extends Controller
                 ->update([
                     'otp_value' => $otpval,
                     'last_location' => $location,
+                    'devices_info' => $device_info,
                      "update_at" => $login_date
                     ]);
 
