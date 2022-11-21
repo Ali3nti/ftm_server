@@ -229,6 +229,7 @@ class UserController extends Controller
     {
 
         $user_id = $request->user_id;
+        $location = $request->location;
 
         $current_time = jdate();
 
@@ -247,6 +248,7 @@ class UserController extends Controller
                 ->where('id', $checkLastTime->id)
                 ->update([
                     'end' => $current_time,
+                    'location' => $location,
                     'status' => 2,
                 ]);
 
@@ -267,6 +269,7 @@ class UserController extends Controller
                     'station_id' => $station->station,
                     'shift_id' => 0,
                     'start' => $current_time,
+                    'location' => $location,
                     'status' => 1,
                 ]);
 

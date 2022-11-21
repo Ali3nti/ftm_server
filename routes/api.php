@@ -48,6 +48,8 @@ Route::namespace("Api")->prefix('')->group(function () {
 
     Route::post('supervisor_shift_data', [SupervisorController::class, 'supervisorShiftData']);
     Route::post('supervisor_report',     [SupervisorController::class, 'SupervisorReport']);
+    Route::post('unaccepted_report',     [SupervisorController::class, 'UnacceptedReport']);
+    Route::post('accepted_report',     [SupervisorController::class, 'AcceptedReport']);
 
     Route::post('operator_report',     [OperatorController::class, 'OperatorReport']);
     Route::post('operator_shift_data', [OperatorController::class, 'operatorShiftData']);
