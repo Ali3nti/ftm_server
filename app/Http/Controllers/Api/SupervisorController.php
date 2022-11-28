@@ -6,6 +6,7 @@ use app\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class SupervisorController extends Controller
 {
     function getUser(int $id)
@@ -32,16 +33,22 @@ class SupervisorController extends Controller
             ->where('shift_id', $shift_id)
             ->first();
 
-        $timesheet = array();
-
+        // $timesheet = array();
         if ($getTimeSheet) {
 
-            $timesheet["id"] = $getTimeSheet->id;
-            $timesheet["user"] = $this->getUser($getTimeSheet->user_id);
-            $timesheet["start"] = $getTimeSheet->start;
-            $timesheet["end"] = $getTimeSheet->end;
-            $timesheet["status"] = $getTimeSheet->status;
-            return $timesheet;
+            $obj = (array) $getTimeSheet;
+            $obj["user"] = $this->getUser($getTimeSheet->user_id);
+            unset($obj["user_id"]);
+            // $timesheet["id"] = $getTimeSheet->id;
+            // $timesheet["user"] = $this->getUser($getTimeSheet->user_id);
+            // $timesheet["start"] = $getTimeSheet->start;
+            // $timesheet["end"] = $getTimeSheet->end;
+            // $timesheet["status"] = $getTimeSheet->status;
+            // return $timesheet;
+            return $obj;
+            // return $this->test();
+            // return (array) $getTimeSheet;
+
         } else {
             return [];
         }
@@ -57,8 +64,11 @@ class SupervisorController extends Controller
         $supervisorReport = array();
 
         $allShift = DB::table('app_report')
+            ->orderByDesc('start_at')
+            ->where('id', 157)
             ->where('station_id', $station)
             ->get();
+
 
         for ($i = 0; $i < count($allShift); $i++) {
 
@@ -69,22 +79,21 @@ class SupervisorController extends Controller
                 $inDay = array();
                 $day = substr($res1, 8, 2);
 
-                if($allShift[$i]->confirm == '11111'){
+                if ($allShift[$i]->confirm == '11111') {
 
-                $acceptedReports = DB::table('app_financial')
-                 ->where('station_id', $station)
-                 ->get();
+                    $acceptedReports = DB::table('app_financial')
+                        ->where('station_id', $station)
+                        ->get();
 
-                 for ($t = 0; $t < count($acceptedReports); $t++) {
-                    $rowsID = unserialize($acceptedReports[$t]->report_id);
-                    foreach ( $rowsID as $row ) {
-                        if ($row == $allShift[$i]->id){
-                            $inDay['accepted'] = $acceptedReports[$t];
+                    for ($t = 0; $t < count($acceptedReports); $t++) {
+                        $rowsID = unserialize($acceptedReports[$t]->report_id);
+                        foreach ($rowsID as $row) {
+                            if ($row == $allShift[$i]->id) {
+                                $inDay['accepted'] = $acceptedReports[$t];
+                            }
                         }
-                 }
-
+                    }
                 }
-            }
                 for ($j = 0, $c = 1; $j < count($allShift); $j++) {
                     $res2 = $allShift[$j]->start_at;
                     if (str_contains($res2, $date) & substr($allShift[$j]->start_at, 8, 2) == $day) {
@@ -94,22 +103,16 @@ class SupervisorController extends Controller
                         $mUser = json_decode($allShift[$j]->users, true);
 
                         $shiftUserCreator = $mUser["creator"];
+                        $shiftUserAssistant = @$mUser['assistant'];
+                        $shiftUserFinisher = @$mUser['finisher'];
 
-                        isset($mUser['assistant'])
-                            ? $shiftUserAssistant = $mUser['assistant']
-                            : $shiftUserAssistant = null;
+                        $inDay[$c]["timesheet"]["creator"] = $this->getTimeSheet(
+                            $shiftUserCreator,
+                            $allShift[$j]->id
+                        );
 
-                        isset($mUser['finisher'])
-                            ? $shiftUserFinisher = $mUser['finisher']
-                            : $shiftUserFinisher = null;
+                        if ($shiftUserCreator != $shiftUserAssistant) {
 
-                        if ($shiftUserCreator == $shiftUserAssistant) {
-
-                            $inDay[$c]["timesheet"]["creator"] = $this->getTimeSheet(
-                                $shiftUserCreator,
-                                $allShift[$j]->id
-                            );
-                        } else {
                             $inDay[$c]["timesheet"]["creator"] = $this->getTimeSheet(
                                 $shiftUserCreator,
                                 $allShift[$j]->id
@@ -258,12 +261,13 @@ class SupervisorController extends Controller
         $amount = $request->amount;
         $id_list = $request->id_list;
 
-        function get_numerics ($str) {
+        function get_numerics($str)
+        {
             preg_match_all('/\d+/', $str, $matches);
             return $matches[0];
         }
 
-        $id_list = get_numerics ($id_list);
+        $id_list = get_numerics($id_list);
 
         $station_id = DB::table("app_users")
             ->where('id', $user_id)
@@ -278,7 +282,7 @@ class SupervisorController extends Controller
 
         $filePath = "";
 
-        $path = 'images/report/' . $station_id .'/'. $year .'/'. $month . '/';
+        $path = 'images/report/' . $station_id . '/' . $year . '/' . $month . '/';
         $name = $year . $month . $day . '-receipt.jpg';
 
         if ($request->receipt_image) {
@@ -289,7 +293,6 @@ class SupervisorController extends Controller
                 $name
             );
             $filePath = $path . $name;
-
         } else {
             $filePath = 'N/A';
         }
@@ -310,10 +313,10 @@ class SupervisorController extends Controller
 
             if ($insertInAppFinancial) {
 
-                foreach($id_list as $id){
+                foreach ($id_list as $id) {
                     $update = DB::table('app_report')
-                    ->where('id', $id)
-                    ->update(['confirm' =>'11111']);
+                        ->where('id', $id)
+                        ->update(['confirm' => '11111']);
                 }
 
 
