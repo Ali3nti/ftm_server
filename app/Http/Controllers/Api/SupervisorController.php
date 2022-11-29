@@ -64,7 +64,7 @@ class SupervisorController extends Controller
         $supervisorReport = array();
 
         $allShift = DB::table('app_report')
-            ->orderByDesc('start_at')
+            ->orderBy('start_at')
             ->where('id', 157)
             ->where('station_id', $station)
             ->get();
@@ -273,26 +273,37 @@ class SupervisorController extends Controller
             ->where('id', $user_id)
             ->value('station');
 
+        $report_date = DB::table("app_report")
+        ->where('id', $id_list[1])
+        ->value('start_at');
         $create_date = jdate();
 
-
-        $year = substr($date, 0, 4);
-        $month = substr($date, 5, 2);
-        $day = substr($date, 8, 2);
+        $year = substr($report_date, 0, 4);
+        $month = substr($report_date, 5, 2);
+        $day = substr($report_date, 8, 2);
 
         $filePath = "";
 
         $path = 'images/report/' . $station_id . '/' . $year . '/' . $month . '/';
-        $name = $year . $month . $day . '-receipt.jpg';
+        $orginalName = $year . $month . $day . '-receipt';
+        $formatType = '.jpg';
 
+        $fileName = $orginalName . $formatType;
+
+        for($i = 1; file_exists($path . $fileName); $i++){
+            $counter = '(' . $i . ')';
+            $fileName = $orginalName . $counter . $formatType;
+        }
+        
         if ($request->receipt_image) {
 
             $image = $request->receipt_image;
             $image->move(
                 $path,
-                $name
+                $fileName,
+                
             );
-            $filePath = $path . $name;
+            $filePath = $path . $fileName;
         } else {
             $filePath = 'N/A';
         }
