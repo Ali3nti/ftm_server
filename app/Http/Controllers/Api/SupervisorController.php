@@ -28,29 +28,19 @@ class SupervisorController extends Controller
 
     function getTimeSheet(int $id, int $shift_id)
     {
-        $getTimeSheet = DB::table('app_timesheet')
+        $getTimeSheet = (array) DB::table('app_timesheet')
             ->where('user_id', $id)
             ->where('shift_id', $shift_id)
             ->first();
 
-        // $timesheet = array();
         if ($getTimeSheet) {
 
-            $obj = (array) $getTimeSheet;
-            $obj["user"] = $this->getUser($getTimeSheet->user_id);
-            unset($obj["user_id"]);
-            // $timesheet["id"] = $getTimeSheet->id;
-            // $timesheet["user"] = $this->getUser($getTimeSheet->user_id);
-            // $timesheet["start"] = $getTimeSheet->start;
-            // $timesheet["end"] = $getTimeSheet->end;
-            // $timesheet["status"] = $getTimeSheet->status;
-            // return $timesheet;
-            return $obj;
-            // return $this->test();
-            // return (array) $getTimeSheet;
+            $getTimeSheet["user"] = $this->getUser($getTimeSheet['user_id']);
+            unset($getTimeSheet["user_id"]);
+            return $getTimeSheet;
 
         } else {
-            return [];
+            return 'Timesheet for this user not found ' . $id . ':' . $shift_id;
         }
     }
 
@@ -65,7 +55,6 @@ class SupervisorController extends Controller
 
         $allShift = DB::table('app_report')
             ->orderBy('start_at')
-            ->where('id', 157)
             ->where('station_id', $station)
             ->get();
 
