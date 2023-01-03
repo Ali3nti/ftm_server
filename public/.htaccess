@@ -55,5 +55,10 @@
 # END cPanel-generated php ini directives, do not edit
 
 <IfModule mod_headers.c>
-   Header set Access-Control-Allow-Origin "*"
- </IfModule>
+SetEnvIf Accept application/json API
+Header always set Access-Control-Allow-Origin "*" env=API<br/>
+### ----- the below line is optional -----
+Header always set Access-Control-Allow-Methods "POST, GET, OPTIONS, DELETE, PUT" env=API
+Header always set Access-Control-Allow-Headers "Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization" env=API
+Header set Access-Control-Allow-Origin "*"
+</IfModule>
