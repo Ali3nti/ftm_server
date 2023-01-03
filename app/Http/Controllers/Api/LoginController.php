@@ -15,6 +15,7 @@ class LoginController extends Controller
         $user_phone = $request->user_phone;
         $location = $request->location;
         $device_info = $request->device_info;
+        $current_user = $request->current_user;
         // $device_id = $request->device_id;
         $login_date = jdate();
 
@@ -26,12 +27,19 @@ class LoginController extends Controller
 
         if ($checkUser) {
 
-            $chars = "0123456789";
             $otpval = "";
 
-            for ($i = 0; $i < 6; $i++) {
-                $otpval .= $chars[mt_rand(0, strlen($chars) - 1)];
+            if ($current_user) {
+                $otpval = $checkUser->otp_value;
+            }else{
+                $chars = "0123456789";
+                $otpval = "";
+
+                for ($i = 0; $i < 6; $i++) {
+                    $otpval .= $chars[mt_rand(0, strlen($chars) - 1)];
+                }
             }
+
 
             $update = DB::table('app_users')
                 ->where('phone', $user_phone)
@@ -39,8 +47,8 @@ class LoginController extends Controller
                     'otp_value' => $otpval,
                     'last_location' => $location,
                     'devices_info' => $device_info,
-                     "update_at" => $login_date
-                    ]);
+                    "update_at" => $login_date
+                ]);
 
             $user = DB::table('app_users')
                 ->where('phone', $user_phone)
