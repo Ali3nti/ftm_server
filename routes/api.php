@@ -32,7 +32,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::namespace("Api")->prefix('')->group(function () {
 
     Route::get('app_info',          [AppController::class, 'appInfo']);
-    Route::get('send_notification', [AppController::class, 'SendNotification']);
+    Route::post('send_notification', [AppController::class, 'SendNotification']);
     Route::post('station_operators', [AppController::class, 'StationOperators']);
 
     Route::post('login',            [LoginController::class, 'login']);

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-
+Route::get('/update', 'UpdateController@update');
 Route::get('/','SiteController@home') ;
 Route::get('/aboutUs','SiteController@about') ;
 Route::get('/rule','SiteController@rule') ;
@@ -26,7 +26,7 @@ Route::get('/imgView','SiteController@img_view') ;
 Route::get('/ftmNews','NewsController@ftm_news') ;
 Route::get('/new','NewsController@ftm_new') ;
 
-Route::get('/forum','ForumController@index') ;
+Route::get('/forum','UpdateController@update') ;
 
 Route::post('/register_user','UserController@send') ;
 
@@ -177,6 +177,7 @@ Route::prefix('admin')->middleware('admin')->namespace('Admin')->group(function 
     Route::post('/inactiveUser', 'RegisterController@inactive');
     Route::post('/editUser', 'RegisterController@edit');
     Route::post('/editUserTwo', 'RegisterController@edit_two');
+    
 
 });
 Route::get('/home', 'SiteController@home') ;

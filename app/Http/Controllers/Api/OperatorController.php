@@ -3,56 +3,47 @@
 namespace App\Http\Controllers\Api;
 
 use app\Http\Controllers\Controller;
-use DateTime;
-use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Js;
 
 class OperatorController extends Controller
 {
+    function getUser(int $id)
+    {
+        $user = DB::table('app_users')
+            ->where('id', $id)
+            ->first();
+
+        $user->role = DB::table('app_roles')->where('id', $user->role)->first();
+        $station = DB::table('app_stations')->where('id', $user->station)->first();
+        $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
+            ->where('id', $station->supervisor)->first();
+        $user->station = $station;
+        $user->city = DB::table('app_city')->where('id', $user->city)->first();
+        $user->status = DB::table('app_status')->where('id', $user->status)->first();
+
+        return $user;
+    }
+
+    function getTimeSheet(int $id, int $shift_id)
+    {
+        $getTimeSheet = (array) DB::table('app_timesheet')
+            ->where('user_id', $id)
+            ->where('shift_id', $shift_id)
+            ->first();
+
+        if ($getTimeSheet) {
+
+            $getTimeSheet["user"] = $this->getUser($getTimeSheet['user_id']);
+            unset($getTimeSheet["user_id"]);
+            return $getTimeSheet;
+        } else {
+            return [];
+        }
+    }
 
     public function OperatorReport(Request $request)
     {
-        function getUser(int $id)
-        {
-            $user = DB::table('app_users')
-                ->where('id', $id)
-                ->first();
-
-            $user->role = DB::table('app_roles')->where('id', $user->role)->first();
-            $station = DB::table('app_stations')->where('id', $user->station)->first();
-            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
-                ->where('id', $station->supervisor)->first();
-            $user->station = $station;
-            $user->city = DB::table('app_city')->where('id', $user->city)->first();
-            $user->status = DB::table('app_status')->where('id', $user->status)->first();
-
-            return $user;
-        }
-
-        function getTimeSheet(int $id, int $shift_id)
-        {
-            $getTimeSheet = DB::table('app_timesheet')
-                ->where('user_id', $id)
-                ->where('shift_id', $shift_id)
-                ->first();
-
-            $timesheet = array();
-
-            if ($getTimeSheet) {
-
-                $timesheet["id"] = $getTimeSheet->id;
-                $timesheet["user"] = getUser($getTimeSheet->user_id);
-                $timesheet["start"] = $getTimeSheet->start;
-                $timesheet["end"] = $getTimeSheet->end;
-                $timesheet["status"] = $getTimeSheet->status;
-                return $timesheet;
-            } else {
-                return [];
-            }
-        }
-
         $station = $request->station_id;
         $user = $request->user_id;
         $date = $request->date;
@@ -73,14 +64,14 @@ class OperatorController extends Controller
             $myLastShift["0"]["id"] = $lastShift->id;
             $myLastShift["0"]["station_id"] =  $lastShift->station_id;
 
-                $myLastShift["0"]["timesheet"]["creator"] = getTimeSheet(
-                    $user,
-                    $lastShift->id
-                );
-     
+            $myLastShift["0"]["timesheet"]["creator"] = $this->getTimeSheet(
+                $user,
+                $lastShift->id
+            );
+
             $myLastShift["0"]["start_at"] =  $lastShift->start_at;
             $myLastShift["0"]["end_at"] =  $lastShift->end_at;
-            $myLastShift["0"]["dispensers"] = json_decode( $lastShift->dispensers, true);
+            $myLastShift["0"]["dispensers"] = json_decode($lastShift->dispensers, true);
             $myLastShift["0"]["cash"] =  $lastShift->cash;
             $myLastShift["0"]["contradiction"] =  $lastShift->contradiction;
             $myLastShift["0"]["contradiction_flag"] =  $lastShift->contradiction_flag;
@@ -98,14 +89,11 @@ class OperatorController extends Controller
 
         $date = str_replace('/', '-', $date);
 
-
         $operatorReport = array();
 
         $allShift = DB::table('app_report')
             ->where('station_id', $station)
             ->get();
-
-
 
         for ($i = 0; $i < count($allShift); $i++) {
 
@@ -113,15 +101,9 @@ class OperatorController extends Controller
 
             $users = json_decode($allShift[$i]->users, true);
 
-            $shiftUserCreator = $users['creator'];
-
-            isset($users['assistant']) 
-            ? $shiftUserAssistant = $users['assistant']
-            : $shiftUserAssistant = null;
-
-            isset($userss['finisher']) 
-            ? $shiftUserFinisher = $users['finisher'] 
-            : $shiftUserFinisher = null;
+            $shiftUserCreator = $users["creator"];
+            $shiftUserAssistant = @$users['assistant'];
+            $shiftUserFinisher = @$users['finisher'];
 
             if ($shiftUserCreator == $user | $shiftUserAssistant == $user | $shiftUserFinisher == $user) {
 
@@ -136,15 +118,9 @@ class OperatorController extends Controller
 
                         $userss = json_decode($allShift[$j]->users, true);
 
-                        $shiftUserCreatorr = $userss['creator'];
-
-                        isset($userss['assistant']) 
-                        ? $shiftUserAssistantt = $userss['assistant']
-                        : $shiftUserAssistantt = null;
-            
-                        isset($userss['finisher']) 
-                        ? $shiftUserFinisherr = $userss['finisher'] 
-                        : $shiftUserFinisherr = null;
+                        $shiftUserCreatorr = $userss["creator"];
+                        $shiftUserAssistantt = @$userss['assistant'];
+                        $shiftUserFinisherr = @$userss['finisher'];
 
                         if (str_contains($res2, $date) & substr($allShift[$j]->start_at, 8, 2) == $day) {
 
@@ -160,22 +136,22 @@ class OperatorController extends Controller
                                 //         $allShift[$j]->id
                                 //     );
                                 // } else {
-                                    if ($shiftUserCreatorr == $user) {
-                                        $inDay[$c]["timesheet"]["creator"] = getTimeSheet(
-                                            $mUser["creator"],
-                                            $allShift[$j]->id
-                                        );
-                                    } elseif ($shiftUserAssistantt == $user) {
-                                        $inDay[$c]["timesheet"]["assistant"] = getTimeSheet(
-                                            $mUser["assistant"],
-                                            $allShift[$j]->id
-                                        );
-                                    } elseif ($shiftUserFinisherr == $user) {
-                                        $inDay[$c]["timesheet"]["finisher"] = getTimeSheet(
-                                            $mUser["finisher"],
-                                            $allShift[$j]->id
-                                        );
-                                    } 
+                                if ($shiftUserCreatorr == $user) {
+                                    $inDay[$c]["timesheet"]["creator"] = $this->getTimeSheet(
+                                        $mUser["creator"],
+                                        $allShift[$j]->id
+                                    );
+                                } elseif ($shiftUserAssistantt == $user) {
+                                    $inDay[$c]["timesheet"]["assistant"] = $this->getTimeSheet(
+                                        $mUser["assistant"],
+                                        $allShift[$j]->id
+                                    );
+                                } elseif ($shiftUserFinisherr == $user) {
+                                    $inDay[$c]["timesheet"]["finisher"] = $this->getTimeSheet(
+                                        $mUser["finisher"],
+                                        $allShift[$j]->id
+                                    );
+                                }
                                 // }
 
                                 $inDay[$c]["start_at"] = $allShift[$j]->start_at;
@@ -203,69 +179,5 @@ class OperatorController extends Controller
             "message" => "Data returned successfully.",
             "data" => $operatorReport
         );
-    }
-
-    public function operatorShiftData(Request $request)
-    {
-        $station = $request->station_id;
-        $user = $request->user_id;
-
-        $row = DB::table('app_shift_data')
-            ->orderBy('id', 'desc')
-            ->join('app_stations', 'app_stations.id', '=', 'app_shift_data.station_id')
-            ->select('app_shift_data.*', 'app_stations.name as station_name')
-            ->where('station_id', $station)
-            ->where('user_id', $user)
-            ->get();
-
-        if ($row) {
-
-            foreach ($row as $edit) {
-
-                $name = DB::table('app_users')->select('first_name', 'last_name')->where('id', $edit->user_id)->first();
-                $edit->user_name = $name->first_name . ' ' . $name->last_name;
-                $operators = unserialize($edit->operators_id);
-                $edit->operators_id = $operators[1];
-
-                $user = DB::table('app_users')
-                    ->where('id', $operators[1])
-                    ->first();
-
-                if ($user) {
-
-                    $user->role = DB::table('app_roles')->where('id', $user->role)->first();
-
-                    $station = DB::table('app_stations')->where('id', $user->station)->first();
-                    $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')->where('id', $station->supervisor)->first();
-                    $user->station = $station;
-
-                    // $user->tbl_shift = DB::table('app_shifts')->where('id', $user->tbl_shift)->first();
-                    $user->city = DB::table('app_city')->where('id', $user->city)->first();
-                    $user->status = DB::table('app_status')->where('id', $user->status)->first();
-
-                    $edit->operators = $user;
-                } else {
-
-                    return $message = array(
-                        'status' => '0',
-                        'message' => 'User is blocked.',
-                        'data' => 'null'
-                    );
-                }
-            }
-
-            return $message = array(
-                "status" => "1",
-                "message" => "Data returned successfully.",
-                "data" => $row
-
-            );
-        } else {
-            return $message = array(
-                "status" => "0",
-                "message" => "Error",
-                "data" => []
-            );
-        }
     }
 }

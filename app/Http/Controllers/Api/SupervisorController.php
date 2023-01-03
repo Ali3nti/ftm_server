@@ -28,29 +28,19 @@ class SupervisorController extends Controller
 
     function getTimeSheet(int $id, int $shift_id)
     {
-        $getTimeSheet = DB::table('app_timesheet')
+        $getTimeSheet = (array) DB::table('app_timesheet')
             ->where('user_id', $id)
             ->where('shift_id', $shift_id)
             ->first();
 
-        // $timesheet = array();
         if ($getTimeSheet) {
 
-            $obj = (array) $getTimeSheet;
-            $obj["user"] = $this->getUser($getTimeSheet->user_id);
-            unset($obj["user_id"]);
-            // $timesheet["id"] = $getTimeSheet->id;
-            // $timesheet["user"] = $this->getUser($getTimeSheet->user_id);
-            // $timesheet["start"] = $getTimeSheet->start;
-            // $timesheet["end"] = $getTimeSheet->end;
-            // $timesheet["status"] = $getTimeSheet->status;
-            // return $timesheet;
-            return $obj;
-            // return $this->test();
-            // return (array) $getTimeSheet;
+            $getTimeSheet["user"] = $this->getUser($getTimeSheet['user_id']);
+            unset($getTimeSheet["user_id"]);
+            return $getTimeSheet;
 
         } else {
-            return [];
+            return 'Timesheet for this user not found ' . $id . ':' . $shift_id;
         }
     }
 
@@ -64,8 +54,7 @@ class SupervisorController extends Controller
         $supervisorReport = array();
 
         $allShift = DB::table('app_report')
-            ->orderByDesc('start_at')
-            ->where('id', 157)
+            ->orderBy('start_at')
             ->where('station_id', $station)
             ->get();
 
@@ -273,26 +262,37 @@ class SupervisorController extends Controller
             ->where('id', $user_id)
             ->value('station');
 
+        $report_date = DB::table("app_report")
+        ->where('id', $id_list[1])
+        ->value('start_at');
         $create_date = jdate();
 
-
-        $year = substr($date, 0, 4);
-        $month = substr($date, 5, 2);
-        $day = substr($date, 8, 2);
+        $year = substr($report_date, 0, 4);
+        $month = substr($report_date, 5, 2);
+        $day = substr($report_date, 8, 2);
 
         $filePath = "";
 
         $path = 'images/report/' . $station_id . '/' . $year . '/' . $month . '/';
-        $name = $year . $month . $day . '-receipt.jpg';
+        $orginalName = $year . $month . $day . '-receipt';
+        $formatType = '.jpg';
 
+        $fileName = $orginalName . $formatType;
+
+        for($i = 1; file_exists($path . $fileName); $i++){
+            $counter = '(' . $i . ')';
+            $fileName = $orginalName . $counter . $formatType;
+        }
+        
         if ($request->receipt_image) {
 
             $image = $request->receipt_image;
             $image->move(
                 $path,
-                $name
+                $fileName,
+                
             );
-            $filePath = $path . $name;
+            $filePath = $path . $fileName;
         } else {
             $filePath = 'N/A';
         }
