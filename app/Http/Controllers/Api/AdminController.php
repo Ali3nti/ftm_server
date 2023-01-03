@@ -8,6 +8,27 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    public function TableData(Request $request){
+        $title = $request->title;
+        $data = DB::table($title)
+        ->get();
+
+        if($data){
+            return $message = array(
+                "status" => "1",
+                "message" => "data is exist",
+                "data" => $data
+            );
+        } else {
+            return $message = array(
+                "status" => "0",
+                "message" => "Error in database",
+                "data" => []
+            );
+        }
+
+    }
+
     public function allShiftData(Request $request)
     {
         $station = $request->station_id;
