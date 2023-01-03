@@ -31,36 +31,38 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::namespace("Api")->prefix('')->group(function () {
 
-    Route::get('app_info',          [AppController::class, 'appInfo']);
+    Route::get('app_info',           [AppController::class, 'appInfo']);
     Route::post('send_notification', [AppController::class, 'SendNotification']);
     Route::post('station_operators', [AppController::class, 'StationOperators']);
 
-    Route::post('login',            [LoginController::class, 'login']);
+    Route::post('login',             [LoginController::class, 'login']);
 
-    Route::get('all_user',         [UserController::class, 'allUser']);
-    Route::get('get_timesheet',    [UserController::class, 'getTimesheet']);
-    Route::post('add_user',         [UserController::class, 'addUser']);
-    Route::post('user_verify',      [UserController::class, 'userVerify']);
-    Route::post('add_timesheet',    [UserController::class, 'addTimesheet']);
+    Route::get('all_user',           [UserController::class, 'allUser']);
+    Route::post('get_timesheet',      [UserController::class, 'getTimesheet']);
+    Route::get('get_user_timesheet',      [UserController::class, 'getUserTimesheet']);
+    Route::post('add_user',          [UserController::class, 'addUser']);
+    Route::post('user_verify',       [UserController::class, 'userVerify']);
+    Route::post('add_timesheet',     [UserController::class, 'addTimesheet']);
 
-    Route::post('add_station',      [AdminController::class, 'addStation']);
-    Route::post('all_shift_data',   [AdminController::class, 'allShiftData']);
+    Route::post('table_data',             [AdminController::class, 'TableData']);
+    Route::post('add_station',       [AdminController::class, 'addStation']);
+    Route::post('all_shift_data',    [AdminController::class, 'allShiftData']);
 
     Route::post('supervisor_shift_data', [SupervisorController::class, 'supervisorShiftData']);
     Route::post('supervisor_report',     [SupervisorController::class, 'SupervisorReport']);
     Route::post('unaccepted_report',     [SupervisorController::class, 'UnacceptedReport']);
-    Route::post('accepted_report',     [SupervisorController::class, 'AcceptedReport']);
+    Route::post('accepted_report',       [SupervisorController::class, 'AcceptedReport']);
 
     Route::post('operator_report',     [OperatorController::class, 'OperatorReport']);
     Route::post('operator_shift_data', [OperatorController::class, 'operatorShiftData']);
 
-    Route::post('employee_status',  [EmployeeController::class, 'EmployeeStatus']);
+    Route::post('employee_status',   [EmployeeController::class, 'EmployeeStatus']);
 
-    Route::post('shift_data',       [ShiftStartController::class, 'ShiftData']);
-    Route::post('start_shift',      [ShiftStartController::class, 'start']);
+    Route::post('shift_data',        [ShiftStartController::class, 'ShiftData']);
+    Route::post('start_shift',       [ShiftStartController::class, 'start']);
 
-    Route::post('end_shift',        [ShiftEndController::class, 'end']);
-    Route::post('failure_shift',        [ShiftEndController::class, 'FailureShift']);
+    Route::post('end_shift',         [ShiftEndController::class, 'end']);
+    Route::post('failure_shift',     [ShiftEndController::class, 'FailureShift']);
 });
 
 Route::namespace("Dev")->prefix('')->group(function () {
@@ -71,4 +73,7 @@ Route::namespace("Dev")->prefix('')->group(function () {
     Route::get('serialize_operators',         [DevController::class, 'SerializeOperators']);
     Route::get('tranform_to_report_table',    [DevController::class, 'TranformToReportTable']);
     Route::get('tranform_to_timesheet_table', [DevController::class, 'TranformToTimesheetTable']);
+    Route::get('get_tables_name', [DevController::class, 'GetTablesName']);
+    Route::get('get_station_timesheet', [DevController::class, 'getStationTimesheet']);
+    Route::get('get_users_timesheet', [DevController::class, 'getUsersTimesheet']);
 });

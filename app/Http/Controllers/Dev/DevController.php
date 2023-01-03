@@ -4,9 +4,23 @@ namespace App\Http\Controllers\Dev;
 
 use app\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use mysqli;
 
 class DevController extends Controller
 {
+    public function Test()
+    {
+        //    $res =  DB::table('app_users')
+        //     ->select('devices_info')
+        //     ->get();
+        //     foreach($res as $row){
+        //         echo $row->devices_info;
+        //     }
+        //     return 1;
+
+
+    }
+
     public function ChangeDate()
     {
         $all = DB::table('app_shift_data')
@@ -115,22 +129,22 @@ class DevController extends Controller
         }
         return $idList;
     }
-    
+
     public function IdChanger()
     {
         $all = DB::table('app_timesheet')
             ->get();
 
         for ($i = 0; $i < count($all); $i++) {
-                $req = DB::table('app_timesheet')
+            $req = DB::table('app_timesheet')
                 ->where('user_id', 4)
                 ->update([
                     'user_id' => 10
                 ]);
         }
         return "ok";
-    }    
-    
+    }
+
     public function IdReportChanger()
     {
         $all = DB::table('app_report')
@@ -138,23 +152,175 @@ class DevController extends Controller
 
         for ($i = 0; $i < count($all); $i++) {
 
-                $users = json_decode($all[$i]->users);
-                if($users->creator == 4){
-                    $users->creator = 10;
-                    $users->assistant = 10;
+            $users = json_decode($all[$i]->users);
+            if ($users->creator == 4) {
+                $users->creator = 10;
+                $users->assistant = 10;
 
-                    $user = json_encode($users);
+                $user = json_encode($users);
 
-                    $req = DB::table('app_report')
+                $req = DB::table('app_report')
                     ->where('id', $all[$i]->id)
                     ->update([
                         'users' => $user
                     ]);
-                }
-                
-
-
+            }
         }
         return "ok";
+    }
+
+    public function getStationTimesheet()
+    {
+        $users = DB::table('app_users')
+            ->where('station', 1)
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($users as $col) {
+
+            $all = DB::table('app_timesheet')
+                ->where([['station_id', 1], ['user_id', $col->id]])
+                ->get();
+
+            $station = DB::table('app_stations')
+                ->where('id', 1)
+                ->first();
+
+            $stationLatitude = substr($station->location, 0, 9);
+            $stationLongitude = substr($station->location, 10, 9);
+
+
+            $delimiter = ",";
+            $filename = "members-data_" . date('Y-m-d') . ".csv";
+            $f = fopen('php://memory', 'w');
+            $fields1 = array($station->name, '    ', $col->first_name, ' ', $col->last_name);
+            $fields2 = array('تاریخ', 'شروع', 'پایان', 'کارکرد', 'در محل');
+            fputcsv($f, $fields1, $delimiter);
+            fputcsv($f, $fields2, $delimiter);
+            $line = array();
+            foreach ($all as $row) {
+                $start = strtotime(date($row->start));
+                $end = strtotime(date($row->end));
+                if (substr($row->start, 5, 2) == '09') {
+                    $function = round((($end - $start) / 3600), 2);
+
+
+                    $userLatitude = substr($row->location, 0, 7);
+                    $userLongitude = substr($row->location, 8, 7);
+
+                    $inLoc = 'خیر';
+
+                    if (
+                        $userLatitude > $stationLatitude - 0.0012 &&
+                        $userLatitude < $stationLatitude + 0.0012
+                    ) {
+                        if (
+                            $userLongitude > $stationLongitude - 0.0012 &&
+                            $userLongitude < $stationLongitude + 0.0012
+                        ) {
+                            $inLoc = 'بله';
+                        }
+                    }
+
+                    $lineData = array(
+                        substr($row->start, 0, 10),
+                        substr($row->start, 11, 8),
+                        substr($row->end, 11, 8),
+                        $function,
+                        $inLoc
+                    );
+                    fputcsv($f, $lineData, $delimiter);
+                }
+            }
+            fseek($f, 0);
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="' . $filename . '";');
+
+            fpassthru($f);
+        }
+    }
+
+    public function getUsersTimesheet()
+    {
+
+        function filterData(&$str)
+        {
+            $str = preg_replace("/\t/", "\\t", $str);
+            $str = preg_replace("/\r?\n/", "\\n", $str);
+            if (strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
+        }
+
+        $filename = "members-data_" . date('Y-m-d') . ".xls";
+
+        $users = DB::table('app_users')
+            ->where('station', 1)
+            // ->orderByDesc('id')
+            ->get();
+
+        foreach ($users as $col) {
+
+            $all = DB::table('app_timesheet')
+                ->where([['station_id', 1], ['user_id', $col->id]])
+                ->get();
+
+            $station = DB::table('app_stations')
+                ->where('id', 1)
+                ->first();
+
+            $stationLatitude = substr($station->location, 0, 9);
+            $stationLongitude = substr($station->location, 10, 9);
+
+            $fields1 = array($station->name, '    ', $col->first_name, ' ', $col->last_name);
+            $fields2 = array('تاریخ', 'شروع', 'پایان', 'کارکرد', 'در محل');
+            $excelData = implode("\t", array_values($fields2)) . "\n";
+            $excelData = implode("\t", array_values($fields1)) . "\n";
+
+            foreach ($all as $row) {
+                $start = strtotime(date($row->start));
+                $end = strtotime(date($row->end));
+                if (substr($row->start, 5, 2) == '09') {
+                    $function = round((($end - $start) / 3600), 2);
+
+
+                    $userLatitude = substr($row->location, 0, 7);
+                    $userLongitude = substr($row->location, 8, 7);
+
+                    $inLoc = 'خیر';
+
+                    if (
+                        $userLatitude > $stationLatitude - 0.0012 &&
+                        $userLatitude < $stationLatitude + 0.0012
+                    ) {
+                        if (
+                            $userLongitude > $stationLongitude - 0.0012 &&
+                            $userLongitude < $stationLongitude + 0.0012
+                        ) {
+                            $inLoc = 'بله';
+                        }
+                    }
+
+                    $lineData = array(
+                        substr($row->start, 0, 10),
+                        substr($row->start, 11, 8),
+                        substr($row->end, 11, 8),
+                        $function,
+                        $inLoc
+                    );
+                    // array_walk($lineData, 'filterData');
+                    $excelData .= implode("\t", array_values($lineData)) . "\n";
+                }
+            }
+            header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+            ini_set("default_charset", "UTF-8");
+            mb_internal_encoding("UTF-8");
+            iconv_set_encoding("internal_encoding", "UTF-8");
+            iconv_set_encoding("output_encoding", "UTF-8");
+            header("Content-Disposition: attachment; filename=\"$filename\"");
+    
+            echo $excelData;
+        }
+
+
+        // exit;
     }
 }
