@@ -7,8 +7,27 @@ use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 class UserController extends Controller
 {
+
+    function getUser(int $id)
+    {
+        $user = DB::table('app_users')
+            ->where('id', $id)
+            ->first();
+
+        $user->role = DB::table('app_roles')->where('id', $user->role)->first();
+        $station = DB::table('app_stations')->where('id', $user->station)->first();
+        $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
+            ->where('id', $station->supervisor)->first();
+        $user->station = $station;
+        $user->city = DB::table('app_city')->where('id', $user->city)->first();
+        $user->status = DB::table('app_status')->where('id', $user->status)->first();
+
+        return $user;
+    }
+
     public function addUser(Request $request)
     {
 
@@ -252,7 +271,7 @@ class UserController extends Controller
                     'status' => 2,
                 ]);
 
-                $updateUserStatus = DB::table('app_users')
+            $updateUserStatus = DB::table('app_users')
                 ->where('id', $user_id)
                 ->update([
                     'status' => 1
@@ -273,7 +292,7 @@ class UserController extends Controller
                     'status' => 1,
                 ]);
 
-                $updateUserStatus = DB::table('app_users')
+            $updateUserStatus = DB::table('app_users')
                 ->where('id', $user_id)
                 ->update([
                     'status' => 3
@@ -286,60 +305,119 @@ class UserController extends Controller
         }
     }
 
-    public function getTimeSheet()
+    public function getTimeSheet(Request $request)
     {
 
-        function getUser(int $id)
-        {
-            $user = DB::table('app_users')
-                ->where('id', $id)
-                ->first();
-
-            $user->role = DB::table('app_roles')->where('id', $user->role)->first();
-            $station = DB::table('app_stations')->where('id', $user->station)->first();
-            $station->supervisor = DB::table('app_users')->select('id', 'first_name', 'last_name')
-                ->where('id', $station->supervisor)->first();
-            $user->station = $station;
-            $user->city = DB::table('app_city')->where('id', $user->city)->first();
-            $user->status = DB::table('app_status')->where('id', $user->status)->first();
-
-            return $user;
-        }
+        $user_id = $request->user_id;
+        $month = jdate()->format('m') - 1;
 
         $getTimeSheet = DB::table('app_timesheet')
-        ->orderByDesc('id')
-        ->get();
+            ->where('user_id', $user_id)
+            ->limit(31)
+            ->get();
 
-        // $getTimeSheet = DB::table('app_timesheet')
-        // ->where('user_id', $id)
-        // ->first();
-        
-    $timesheets = array();
+        $timesheets = array();
 
-    if ($getTimeSheet->isNotEmpty()) {
+        if ($getTimeSheet->isNotEmpty()) {
 
-        foreach ($getTimeSheet as $row){
+            foreach ($getTimeSheet as $row) {
+                if ($month == substr($row->start, 5, 2)) {
+                $timesheet["id"] = $row->id;
+                $timesheet["user"] = $this->getUser($row->user_id);
+                $timesheet["start"] = $row->start;
+                $timesheet["end"] = $row->end;
+                $timesheet["status"] = $row->status;
+                $timesheets[] = $timesheet;
+                }
+            }
 
-        $timesheet["id"] = $row->id;
-        $timesheet["user"] = getUser($row->user_id);
-        $timesheet["start"] = $row->start;
-        $timesheet["end"] = $row->end;
-        $timesheet["status"] = $row->status;
-        $timesheets[] = $timesheet;
+            return $message = array(
+                'status' => '1',
+                'message' => 'Timesheet is returned',
+                'data' => $timesheets
+            );
+        } else {
+            return $message = array(
+                'status' => '2',
+                'message' => 'Timesheet for this user is Empty',
+                'data' => []
+            );
+        }
+    }
+
+    public function getUserTimeSheet()
+    {
+
+        $month = jdate()->format('m') - 1;
+        $data = array();
+
+        $stations = DB::table('app_stations')
+            ->get();
+
+        foreach ($stations as $station) {
+
+            $users = DB::table('app_users')
+                ->where('station', $station->id)
+                ->get();
+
+            $userList = array();
+
+            foreach ($users as $user) {
+
+                $getTimeSheet = DB::table('app_timesheet')
+                    ->orderByDesc('id')
+                    ->where('user_id', $user->id)
+                    ->limit(31)
+                    ->get();
+
+                $total = 0;
+                if ($getTimeSheet->isNotEmpty()) {
+
+                    if ($month == substr($getTimeSheet[0]->start, 5, 2)) {
+
+                        $last_timesheet["id"] = $getTimeSheet[0]->id;
+                        $last_timesheet["user"] = $this->getUser($getTimeSheet[0]->user_id);
+                        $last_timesheet["start"] = $getTimeSheet[0]->start;
+                        $last_timesheet["end"] = $getTimeSheet[0]->end;
+                        $last_timesheet["status"] = $getTimeSheet[0]->status;
+
+                    } else {
+                        $last_timesheet = null;
+                    }
+
+                    foreach ($getTimeSheet as $row) {
+
+                        if ($month == substr($row->start, 5, 2)) {
+                            $start = new DateTime($row->start);
+                            $end = new DateTime(($row->end != 0) ? $row->end : $row->start);
+                            $result = $end->diff($start);
+
+                            $total += $result->d * 24;
+                            $total += $result->h;
+                            $total += $result->i/60;
+                        }
+                        $userList[$user->id] = [
+                            'last_timesheet' => $last_timesheet,
+                            'total' => round($total,1)
+                        ];
+                    }
+                }
+            }
+
+            $data[$station->id] = $userList;
         }
 
         return $message = array(
             'status' => '1',
-            'message'=> 'Timesheet is returned',
-            'data' => $timesheets
+            'message' => 'Timesheet is returned',
+            'data' => $data
         );
-    }else{
-            return $message = array(
-                'status' => '2',
-                'message'=> 'Timesheet for this user is Empty',
-                'data' => []
-            );
-        }
-        
+        // else {
+        //     return $message = array(
+        //         'status' => '2',
+        //         'message' => 'Timesheet for this user is Empty',
+        //         'data' => []
+        //     );
+        // }
     }
 }
