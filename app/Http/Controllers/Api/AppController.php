@@ -26,6 +26,10 @@ class AppController extends Controller
         $stationsList = DB::table('app_stations')
             ->get();
 
+        $version = DB::table('app_setting')
+        ->where('key', 'version')
+            ->value('value');
+
         $stations = array();
 
         foreach ($stationsList as $row) {
@@ -38,7 +42,13 @@ class AppController extends Controller
             $stations[] = $row;
         }
 
+        $tables = DB::select("SHOW TABLES LIKE 'app%'");
+        $tablesTitle = array();
 
+        for ($i = 0; $i < count($tables); $i++) {
+            $array = (array) $tables[$i];
+            $tablesTitle[$i] = $array["Tables_in_farzint1_afrafar (app%)"];
+        }
 
         return $message = array(
             'status' => '1',
@@ -48,6 +58,8 @@ class AppController extends Controller
                 'roles' => $roles,
                 'cities' => $cities,
                 'stations' => $stations,
+                'tables' => $tablesTitle,
+                'version' => $version,
                 // 'supervisors' => $supervisors
             ]
         );
@@ -85,7 +97,7 @@ class AppController extends Controller
         $role_id = $request->role_id;
 
         $notif = DB::table('app_notif')
-        ->orderByDesc('id')
+            ->orderByDesc('id')
             ->where([
                 ['visibility', 'show'],
                 ['contact', $role_id],
@@ -105,7 +117,7 @@ class AppController extends Controller
                 'message' => 'Notification existing',
                 'data' => $notif
             );
-        }else{
+        } else {
             return $message = array(
                 'status' => '0',
                 'message' => 'Notification not exist',
