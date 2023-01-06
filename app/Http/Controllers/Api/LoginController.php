@@ -58,7 +58,7 @@ class LoginController extends Controller
             if ($user) {
 
                 $user->role = DB::table('app_roles')->where('id', $user->role)->first();
-
+                
                 $station = DB::table('app_stations')->where('id', $user->station)->first();
                 $station->supervisor = DB::table('app_users')
                     ->select('id', 'first_name', 'last_name')
