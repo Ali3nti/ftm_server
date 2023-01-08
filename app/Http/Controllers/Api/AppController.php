@@ -27,7 +27,7 @@ class AppController extends Controller
             ->get();
 
         $version = DB::table('app_setting')
-        ->where('key', 'version')
+            ->where('key', 'version')
             ->value('value');
 
         $stations = array();
@@ -105,9 +105,6 @@ class AppController extends Controller
                 ['visibility', 'show'],
                 ['contact', 0],
             ])
-            // ->where('visibility', 'show')
-            // ->where('contact', $role_id)
-            // ->where('contact', 0)
             ->get();
 
         if ($notif) {

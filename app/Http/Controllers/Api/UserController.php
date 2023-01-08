@@ -309,24 +309,55 @@ class UserController extends Controller
     {
 
         $user_id = $request->user_id;
-        $month = jdate()->format('m') - 1;
+        $month = jdate()->format('m');
 
-        $getTimeSheet = DB::table('app_timesheet')
+        $getTimesheet = DB::table('app_timesheet')
+            ->orderByDesc('id')
             ->where('user_id', $user_id)
             ->limit(31)
             ->get();
+        $stationId = DB::table('app_users')
+            ->where('id' , $user_id)
+            ->value('station');
+        
+        $stationLocation = DB::table('app_stations')
+            ->where('id', $stationId)
+            ->value('location');
+            
+        $stationLatitude = substr($stationLocation, 0, 9);
+        $stationLongitude = substr($stationLocation, 10, 9);
 
         $timesheets = array();
 
-        if ($getTimeSheet->isNotEmpty()) {
+        if ($getTimesheet->isNotEmpty()) {
 
-            foreach ($getTimeSheet as $row) {
+            foreach ($getTimesheet as $row) {
                 if ($month == substr($row->start, 5, 2)) {
                 $timesheet["id"] = $row->id;
                 $timesheet["user"] = $this->getUser($row->user_id);
                 $timesheet["start"] = $row->start;
                 $timesheet["end"] = $row->end;
                 $timesheet["status"] = $row->status;
+                
+
+                    $userLatitude = substr($row->location, 0, 7);
+                    $userLongitude = substr($row->location, 8, 7);
+
+                    $inLoc = false;
+
+                    if (
+                        $userLatitude > $stationLatitude - 0.0012 &&
+                        $userLatitude < $stationLatitude + 0.0012
+                    ) {
+                        if (
+                            $userLongitude > $stationLongitude - 0.0012 &&
+                            $userLongitude < $stationLongitude + 0.0012
+                        ) {
+                            $inLoc = true;
+                        }
+                    }                
+                $timesheet["location"] = $inLoc;
+                
                 $timesheets[] = $timesheet;
                 }
             }
@@ -334,7 +365,7 @@ class UserController extends Controller
             return $message = array(
                 'status' => '1',
                 'message' => 'Timesheet is returned',
-                'data' => $timesheets
+                'data' => array_reverse($timesheets)
             );
         } else {
             return $message = array(
@@ -348,7 +379,7 @@ class UserController extends Controller
     public function getUserTimeSheet()
     {
 
-        $month = jdate()->format('m') - 1;
+        $month = jdate()->format('m');
         $data = array();
 
         $stations = DB::table('app_stations')
@@ -403,7 +434,6 @@ class UserController extends Controller
                     }
                 }
             }
-
             $data[$station->id] = $userList;
         }
 
