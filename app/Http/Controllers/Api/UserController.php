@@ -317,13 +317,13 @@ class UserController extends Controller
             ->limit(31)
             ->get();
         $stationId = DB::table('app_users')
-            ->where('id' , $user_id)
+            ->where('id', $user_id)
             ->value('station');
-        
+
         $stationLocation = DB::table('app_stations')
             ->where('id', $stationId)
             ->value('location');
-            
+
         $stationLatitude = substr($stationLocation, 0, 9);
         $stationLongitude = substr($stationLocation, 10, 9);
 
@@ -333,32 +333,35 @@ class UserController extends Controller
 
             foreach ($getTimesheet as $row) {
                 if ($month == substr($row->start, 5, 2)) {
-                $timesheet["id"] = $row->id;
-                $timesheet["user"] = $this->getUser($row->user_id);
-                $timesheet["start"] = $row->start;
-                $timesheet["end"] = $row->end;
-                $timesheet["status"] = $row->status;
-                
+                    $timesheet["id"] = $row->id;
+                    $timesheet["user"] = $this->getUser($row->user_id);
+                    $timesheet["start"] = $row->start;
+                    $timesheet["end"] = $row->end;
+                    $timesheet["status"] = $row->status;
 
-                    $userLatitude = substr($row->location, 0, 7);
-                    $userLongitude = substr($row->location, 8, 7);
-
-                    $inLoc = false;
-
-                    if (
-                        $userLatitude > $stationLatitude - 0.0012 &&
-                        $userLatitude < $stationLatitude + 0.0012
-                    ) {
+                    $inLoc = 'خارج از محدوده';
+                    if ($row->location == '0,0') {
+                        $inLoc = 'در جایگاه';
+                    } elseif ($row->location == '0.0,0.0') {
+                        $inLoc = 'توسط وب اپلیکیشن';
+                    } else {
+                        $userLatitude = substr($row->location, 0, 7);
+                        $userLongitude = substr($row->location, 8, 7);
                         if (
-                            $userLongitude > $stationLongitude - 0.0012 &&
-                            $userLongitude < $stationLongitude + 0.0012
+                            $userLatitude > $stationLatitude - 0.0012 &&
+                            $userLatitude < $stationLatitude + 0.0012
                         ) {
-                            $inLoc = true;
+                            if (
+                                $userLongitude > $stationLongitude - 0.0012 &&
+                                $userLongitude < $stationLongitude + 0.0012
+                            ) {
+                                $inLoc = 'در محل کار';
+                            }
                         }
-                    }                
-                $timesheet["location"] = $inLoc;
-                
-                $timesheets[] = $timesheet;
+                    }
+                    $timesheet["location"] = $inLoc;
+
+                    $timesheets[] = $timesheet;
                 }
             }
 
@@ -412,29 +415,29 @@ class UserController extends Controller
                         $last_timesheet["end"] = $getTimeSheet[0]->end;
                         $last_timesheet["status"] = $getTimeSheet[0]->status;
 
-                    } else {
-                        $last_timesheet = null;
-                    }
+                        foreach ($getTimeSheet as $row) {
 
-                    foreach ($getTimeSheet as $row) {
+                            if ($month == substr($row->start, 5, 2)) {
+                                $start = new DateTime($row->start);
+                                $end = new DateTime(($row->end != 0) ? $row->end : $row->start);
+                                $result = $end->diff($start);
 
-                        if ($month == substr($row->start, 5, 2)) {
-                            $start = new DateTime($row->start);
-                            $end = new DateTime(($row->end != 0) ? $row->end : $row->start);
-                            $result = $end->diff($start);
-
-                            $total += $result->d * 24;
-                            $total += $result->h;
-                            $total += $result->i/60;
+                                $total += $result->d * 24;
+                                $total += $result->h;
+                                $total += $result->i / 60;
+                            }
+                            $userList[$user->id] = [
+                                'last_timesheet' => $last_timesheet,
+                                'total' => round($total, 1)
+                            ];
                         }
-                        $userList[$user->id] = [
-                            'last_timesheet' => $last_timesheet,
-                            'total' => round($total,1)
-                        ];
                     }
                 }
             }
-            $data[$station->id] = $userList;
+
+            if ($userList) {
+                $data[$station->id] = $userList;
+            }
         }
 
         return $message = array(
